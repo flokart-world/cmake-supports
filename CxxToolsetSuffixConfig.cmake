@@ -6,7 +6,7 @@
 # Copyright 2007      Mike Jackson
 # Copyright 2008      Andreas Pakulat <apaku@gmx.de>
 # Copyright 2008-2012 Philip Lowman <philip@yhbt.com>
-# Copyright 2014      Flokart World Co., Inc.
+# Copyright 2014      Flokart World, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
