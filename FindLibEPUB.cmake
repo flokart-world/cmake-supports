@@ -1,5 +1,5 @@
 # Copyright (c) 2014 BPS Co., Ltd.
 # All rights reserved.
 
-find_package(PkgConfig REQUIRED)
-PKG_CHECK_MODULES(LIBEPUB REQUIRED libepub)
+include (PkgConfigUtil)
+FIND_PC_PACKAGE(LIBEPUB libepub)
