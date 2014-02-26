@@ -33,25 +33,27 @@ list (APPEND CMAKE_MODULE_PATH "${CMS_MODULE_DIR}")
 
 macro (CMS_REINIT_CACHE _name _value _type _desc)
   if (NOT CMS_REINIT_${_name})
-    set (${_name} ${_value} CACHE ${_type} "${_desc}" FORCE)
+    set (${_name} "${_value}" CACHE ${_type} "${_desc}" FORCE)
     set (CMS_REINIT_${_name} true CACHE INTERNAL "")
   endif ()
 endmacro ()
 
 macro (CMS_INSTALL_MODULE _name)
-  set (_var MODULE_${_name})
+  set (_var CMS_MODULE_${_name})
   set (_filename "Find${_name}.cmake")
-  find_file (${_var} ${_filename} PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  find_file (${_var} ${_filename}
+             PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
+                   "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
   if (NOT ${_var})
     message (FATAL_ERROR "${_filename} not found!")
   endif ()
 
-  install (FILES "${${_filename}}" DESTINATION "${CMS_MODULE_DIR}")
+  install (FILES "${${_var}}" DESTINATION "${CMS_MODULE_DIR}")
 endmacro ()
 
 macro (CMS_INSTALL_PACKAGE _name)
-  set (_var PACKAGE_${_name})
+  set (_var CMS_PACKAGE_${_name})
   set (_filename "${_name}.pc.in")
   find_file (${_var} ${_filename} PATHS "${CMAKE_CURRENT_SOURCE_DIR}")
 
