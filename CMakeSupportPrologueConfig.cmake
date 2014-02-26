@@ -43,7 +43,8 @@ macro (CMS_INSTALL_MODULE _name)
   set (_filename "Find${_name}.cmake")
   find_file (${_var} ${_filename}
              PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
-                   "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+                   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+             NO_DEFAULT_PATH)
 
   if (NOT ${_var})
     message (FATAL_ERROR "${_filename} not found!")
@@ -55,7 +56,8 @@ endmacro ()
 macro (CMS_INSTALL_PACKAGE _name)
   set (_var CMS_PACKAGE_${_name})
   set (_filename "${_name}.pc.in")
-  find_file (${_var} ${_filename} PATHS "${CMAKE_CURRENT_SOURCE_DIR}")
+  find_file (${_var} ${_filename} PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
+             NO_DEFAULT_PATH)
 
   if (NOT ${_var})
     message (FATAL_ERROR "${_filename} not found!")
