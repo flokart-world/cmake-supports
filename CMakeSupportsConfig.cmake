@@ -103,3 +103,5 @@ endif ()
 if (NOT CXX_TOOLSET_SUFFIX)
   include ("${CMS_PRIVATE_DIR}/SetToolsetSuffixCxx.cmake")
 endif ()
+
+include ("${CMS_PRIVATE_DIR}/PrecompiledHeaderCxx.cmake")
