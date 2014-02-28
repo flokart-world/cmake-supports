@@ -1,0 +1,2 @@
+You can put your additional FindXXX.cmake listfiles in this directory,
+and even add them into the repository.

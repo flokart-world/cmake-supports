@@ -1,1 +1,2 @@
-Modules/Installed/Find*.cmake
+Installed/Modules/Find*.cmake
+Installed/DotPCFiles/*.pc
