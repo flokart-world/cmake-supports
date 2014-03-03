@@ -40,15 +40,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #=============================================================================
 
-find_path(JPEG_INCLUDE_DIR jpeglib.h)
+CMS_ASSIGN_PACKAGE(JPEG libjpeg)
+PKG_CHECK_MODULES(PC_JPEG QUIET libjpeg)
 
-set(JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
-find_library(JPEG_LIBRARY NAMES ${JPEG_NAMES} )
+find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h
+          HINTS
+          "${PC_JPEG_INCLUDEDIR}"
+          "${PC_JPEG_INCLUDEDIRS}")
+
+set (JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
+set (JPEG_LIBRARY_DIR "${PC_JPEG_INCLUDEDIR}" CACHE PATH "")
+
+find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES})
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(JPEG DEFAULT_MSG JPEG_LIBRARY JPEG_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(JPEG DEFAULT_MSG
+                                  JPEG_LIBRARY
+                                  JPEG_LIBRARY_DIR
+                                  JPEG_INCLUDE_DIR)
 
 if(JPEG_FOUND)
   set(JPEG_LIBRARIES ${JPEG_LIBRARY})
@@ -60,5 +71,14 @@ if(JPEG_LIBRARY)
   get_filename_component (NATIVE_JPEG_LIB_PATH ${JPEG_LIBRARY} PATH)
 endif()
 
-mark_as_advanced(JPEG_LIBRARY JPEG_INCLUDE_DIR )
-set (JPEG_INCLUDE_DIRS ${JPEG_INCLUDE_DIR})
+mark_as_advanced (JPEG_LIBRARY
+                  JPEG_INCLUDE_DIR
+                  JPEG_LIBRARY_DIR)
+
+set (JPEG_INCLUDE_DIRS "${PC_JPEG_INCLUDE_DIRS}")
+set (JPEG_LIBRARY_DIRS "${PC_JPEG_LIBRARY_DIRS}")
+
+CMS_REPLACE_MODULE_DIRS(JPEG
+                        "${PC_JPEG_INCLUDEDIR}"
+                        "${PC_JPEG_LIBDIR}")
+CMS_PROMOTE_MODULE_DIRS(JPEG)

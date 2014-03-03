@@ -106,6 +106,8 @@ function(_Boost_GUESS_COMPILER_PREFIX _ret)
   set(${_ret} ${_boost_COMPILER} PARENT_SCOPE)
 endfunction()
 
-_Boost_GUESS_COMPILER_PREFIX(CXX_TOOLSET_SUFFIX)
-set (CXX_TOOLSET_SUFFIX "${CXX_TOOLSET_SUFFIX}" CACHE STRING
+_Boost_GUESS_COMPILER_PREFIX(_cms_suffix_cxx)
+
+set (CMS_TOOLSET_SUFFIX_CXX "${_cms_suffix_cxx}" CACHE STRING
      "The suffix string which is put after the names of the C++ libraries")
+mark_as_advanced (CMS_TOOLSET_SUFFIX_CXX)
