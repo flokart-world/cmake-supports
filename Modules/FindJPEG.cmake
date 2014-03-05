@@ -46,12 +46,15 @@ PKG_CHECK_MODULES(PC_JPEG QUIET libjpeg)
 find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h
           HINTS
           "${PC_JPEG_INCLUDEDIR}"
-          "${PC_JPEG_INCLUDEDIRS}")
+          "${PC_JPEG_INCLUDE_DIRS}")
 
 set (JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
 set (JPEG_LIBRARY_DIR "${PC_JPEG_INCLUDEDIR}" CACHE PATH "")
 
-find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES})
+find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES}
+          HINTS
+          "${PC_JPEG_LIBDIR}"
+          "${PC_JPEG_LIBRARY_DIRS}")
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
 # all listed variables are TRUE
