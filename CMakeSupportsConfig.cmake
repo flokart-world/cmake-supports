@@ -185,12 +185,18 @@ endfunction ()
 
 find_package (PkgConfig REQUIRED)
 
+set (CMS_VERSION 0.0.1)
 set (CMS_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set (CMS_PRIVATE_DIR "${CMS_BASE_DIR}/Private")
 set (CMS_INSTALL_DIR "${CMS_BASE_DIR}/Installed")
 set (CMS_MODULE_DIR "${CMS_INSTALL_DIR}/Modules")
 set (CMS_DOTPC_DIR "${CMS_INSTALL_DIR}/DotPCFiles")
 set (CMS_INSTALL_PREFIX "$ENV{CMS_INSTALL_PREFIX}")
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(CMakeSupports
+                                  REQUIRED_VARS CMS_BASE_DIR
+                                  VERSION_VAR CMS_VERSION)
 
 list (APPEND CMAKE_MODULE_PATH "${CMS_BASE_DIR}/Modules")
 list (APPEND CMAKE_MODULE_PATH "${CMS_MODULE_DIR}")
