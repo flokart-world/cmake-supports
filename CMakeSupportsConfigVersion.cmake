@@ -19,7 +19,7 @@
 #    3. This notice may not be removed or altered from any source
 #    distribution.
 
-set (CMS_VERSION 0.0.1)
+set (CMS_VERSION 0.0.2)
 
 if (PACKAGE_FIND_VERSION)
   if (CMS_VERSION VERSION_LESS PACKAGE_FIND_VERSION)
