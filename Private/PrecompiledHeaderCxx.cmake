@@ -24,15 +24,15 @@ function (CMS_PRECOMPILE_HEADER_CXX _header)
   CMS_CHECK_TARGET()
 
   set (CMS_PCH_CXX_HEADER "${_header}")
-  set (_header_file "${PROJECT_BINARY_DIR}/${_header}")
-  include_directories ("${PROJECT_BINARY_DIR}")
+  set (_header_file "${CMAKE_CURRENT_BINARY_DIR}/${_header}")
+  include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
 
   if (MSVC AND USE_PRECOMPILED_HEADER)
     configure_file ("${_header}.in" "${_header_file}" @ONLY)
     add_compile_options ("/Yu\"${_header}\"")
 
     get_filename_component (_header_name "${_header}" NAME_WE)
-    set (_source "${PROJECT_BINARY_DIR}/${_header_name}.cpp")
+    set (_source "${CMAKE_CURRENT_BINARY_DIR}/${_header_name}.cpp")
     unset (_header_name)
 
     configure_file ("${CMS_PRIVATE_DIR}/PrecompiledHeader.cpp.in"
