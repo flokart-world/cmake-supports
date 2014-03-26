@@ -59,7 +59,7 @@ endfunction ()
 
 function (CMS_IMPORT_LIBRARY_INCLUDE_DIR _directory)
   set (CMS_IS_INCLUDE_DIR true)
-  add_subdirectory ("${_directory}")
+  add_subdirectory ("${_directory}" "${CMAKE_CURRENT_BINARY_DIR}/include")
   _CMS_PROMOTE_LIBRARY_HEADERS()
 endfunction ()
 
