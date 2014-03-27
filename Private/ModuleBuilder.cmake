@@ -265,6 +265,40 @@ function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS)
   endif ()
 endfunction ()
 
+macro (CMS_BEGIN_EXECUTABLE _name)
+  CMS_CHECK_PREFIX()
+
+  if (NOT _name)
+    set (_name "${CMAKE_PROJECT_NAME}")
+  endif ()
+
+  CMS_BEGIN_TARGET("${_name}")
+
+  set (CMS_CURRENT_EXECUTABLE_NAME "${_name}")
+  unset (_name)
+endmacro ()
+
+macro (CMS_ENABLE_TESTING)
+  set (ENABLE_TESTING true CACHE BOOL "Set true to enable testing")
+
+  if (ENABLE_TESTING)
+    enable_testing ()
+  endif ()
+endmacro ()
+
+macro (CMS_BEGIN_TEST _name)
+  CMS_CHECK_PREFIX()
+
+  if (NOT _name)
+    set (_name "${CMAKE_PROJECT_NAME}")
+  endif ()
+
+  CMS_BEGIN_TARGET("${_name}")
+
+  set (CMS_CURRENT_TEST_NAME "${_name}")
+  unset (_name)
+endmacro ()
+
 macro (CMS_BEGIN_LIBRARY_C _name)
   CMS_CHECK_PREFIX()
   set (CMS_CURRENT_LIBRARY_LANG C)
@@ -308,6 +342,18 @@ macro (CMS_BEGIN_LIBRARY_CXX _name)
   endif ()
 endmacro ()
 
+macro (CMS_CHECK_EXECUTABLE)
+  if (NOT CMS_CURRENT_EXECUTABLE_NAME)
+    message (FATAL_ERROR "Executable definition has not begun.")
+  endif ()
+endmacro ()
+
+macro (CMS_CHECK_TEST)
+  if (NOT CMS_CURRENT_TEST_NAME)
+    message (FATAL_ERROR "Test definition has not begun.")
+  endif ()
+endmacro ()
+
 macro (CMS_CHECK_LIBRARY)
   if (NOT CMS_CURRENT_LIBRARY_NAME)
     message (FATAL_ERROR "Library definition has not begun.")
@@ -340,6 +386,21 @@ function (CMS_ADD_GENERATED_FILES)
     CMS_PROMOTE_TO_PARENT_SCOPE(CMS_GENERATED_FILES)
   else ()
     message (FATAL_ERROR "No generated files are specified.")
+  endif ()
+endfunction ()
+
+function (CMS_ADD_LINKAGES)
+  if (ARGN)
+    list (APPEND CMS_LINKAGES ${ARGN})
+    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_LINKAGES)
+  else ()
+    message (FATAL_ERROR "No linkages are specified.")
+  endif ()
+endfunction ()
+
+function (CMS_APPLY_LINKAGES)
+  if (CMS_LINKAGES)
+    target_link_libraries("${CMS_CURRENT_TARGET_NAME}" ${CMS_LINKAGES})
   endif ()
 endfunction ()
 
@@ -424,6 +485,54 @@ macro (_CMS_FLUSH_TARGET_SETTINGS)
   CMS_MAP_CLEAR(CMS_SOURCE_DEFINITIONS)
 endmacro ()
 
+macro (CMS_END_EXECUTABLE)
+  CMS_CHECK_PREFIX()
+  CMS_CHECK_EXECUTABLE()
+
+  CMS_RESOLVE_DEPENDENCIES()
+  CMS_APPLY_DEPENDENCIES()
+
+  add_executable ("${CMS_CURRENT_TARGET_NAME}"
+                  ${CMS_SOURCE_FILES}
+                  ${CMS_GENERATED_FILES}
+                  ${CMS_ADDITIONAL_FILES})
+
+  CMS_APPLY_LINKAGES()
+  _CMS_FLUSH_TARGET_SETTINGS()
+
+  install (TARGETS "${CMS_CURRENT_TARGET_NAME}" DESTINATION bin)
+  unset (CMS_CURRENT_EXECUTABLE_NAME)
+  _CMS_END_TARGET()
+endmacro ()
+
+macro (CMS_END_TEST)
+  CMS_CHECK_PREFIX()
+  CMS_CHECK_TEST()
+
+  if (ENABLE_TESTING)
+    CMS_RESOLVE_DEPENDENCIES()
+    CMS_APPLY_DEPENDENCIES()
+
+    add_executable ("${CMS_CURRENT_TARGET_NAME}"
+                    ${CMS_SOURCE_FILES}
+                    ${CMS_GENERATED_FILES}
+                    ${CMS_ADDITIONAL_FILES})
+
+    CMS_APPLY_LINKAGES()
+    _CMS_FLUSH_TARGET_SETTINGS()
+
+    add_test (NAME "${CMS_CURRENT_TEST_NAME}"
+              COMMAND "${CMS_CURRENT_TARGET_NAME}")
+  else ()
+    CMS_MAP_CLEAR(CMS_SOURCE_GROUPS)
+    CMS_MAP_CLEAR(CMS_SOURCE_FLAGS)
+    CMS_MAP_CLEAR(CMS_SOURCE_DEFINITIONS)
+  endif ()
+
+  unset (CMS_CURRENT_TEST_NAME)
+  _CMS_END_TARGET()
+endmacro ()
+
 macro (CMS_END_LIBRARY)
   CMS_CHECK_PREFIX()
   CMS_CHECK_LIBRARY()
@@ -449,6 +558,7 @@ macro (CMS_END_LIBRARY)
                ${CMS_GENERATED_FILES}
                ${CMS_ADDITIONAL_FILES})
 
+  CMS_APPLY_LINKAGES()
   _CMS_FLUSH_TARGET_SETTINGS()
 
   if (CMS_CURRENT_LIBRARY_LANG STREQUAL "C")
