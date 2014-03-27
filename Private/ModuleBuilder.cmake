@@ -533,6 +533,24 @@ macro (CMS_END_TEST)
   _CMS_END_TARGET()
 endmacro ()
 
+function (_CMS_ADD_LIBRARY _target)
+  unset (_available)
+  add_library ("${_target}" ${ARGN})
+
+  foreach (_file IN LISTS ARGN)
+    get_filename_component (_ext "${_file}" EXT)
+
+    if (_ext MATCHES "^\\.(c|cc|cpp|cxx|m|mm|o)$")
+      set (_available true)
+      break ()
+    endif ()
+  endforeach ()
+
+  if (_available)
+    install (TARGETS "${_target}" DESTINATION lib)
+  endif ()
+endfunction ()
+
 macro (CMS_END_LIBRARY)
   CMS_CHECK_PREFIX()
   CMS_CHECK_LIBRARY()
@@ -553,10 +571,10 @@ macro (CMS_END_LIBRARY)
 
   CMS_APPLY_DEPENDENCIES()
 
-  add_library ("${CMS_CURRENT_TARGET_NAME}"
-               ${CMS_SOURCE_FILES}
-               ${CMS_GENERATED_FILES}
-               ${CMS_ADDITIONAL_FILES})
+  _CMS_ADD_LIBRARY("${CMS_CURRENT_TARGET_NAME}"
+                   ${CMS_SOURCE_FILES}
+                   ${CMS_GENERATED_FILES}
+                   ${CMS_ADDITIONAL_FILES})
 
   CMS_APPLY_LINKAGES()
   _CMS_FLUSH_TARGET_SETTINGS()
@@ -567,7 +585,6 @@ macro (CMS_END_LIBRARY)
     _CMS_END_LIBRARY_CXX()
   endif ()
 
-  install (TARGETS "${CMS_CURRENT_TARGET_NAME}" DESTINATION lib)
   unset (CMS_CURRENT_LIBRARY_NAME)
   _CMS_END_TARGET()
 endmacro ()
