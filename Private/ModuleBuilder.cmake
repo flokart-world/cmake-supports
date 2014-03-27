@@ -335,7 +335,8 @@ macro (_CMS_END_TARGET)
 endmacro ()
 
 macro (_CMS_END_LIBRARY_C)
-  set_target_properties ("${CMS_CURRENT_TARGET_NAME}" PROPERTIES
+  set_target_properties ("${CMS_CURRENT_TARGET_NAME}"
+                         PROPERTIES LINKER_LANGUAGE C
                          OUTPUT_NAME
                          "${CMS_CURRENT_LIBRARY_NAME}"
                          OUTPUT_NAME_DEBUG
@@ -343,7 +344,8 @@ macro (_CMS_END_LIBRARY_C)
 endmacro ()
 
 macro (_CMS_END_LIBRARY_CXX)
-  set_target_properties ("${CMS_CURRENT_TARGET_NAME}" PROPERTIES
+  set_target_properties ("${CMS_CURRENT_TARGET_NAME}"
+      PROPERTIES LINKER_LANGUAGE CXX
       OUTPUT_NAME
       "lib${CMS_CURRENT_LIBRARY_NAME}${CMS_CURRENT_LIBRARY_SUFFIX}"
       OUTPUT_NAME_DEBUG
