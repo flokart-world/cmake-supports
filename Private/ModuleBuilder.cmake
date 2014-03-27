@@ -265,17 +265,36 @@ function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS)
   endif ()
 endfunction ()
 
-macro (CMS_BEGIN_EXECUTABLE _name)
-  CMS_CHECK_PREFIX()
-
-  if (NOT _name)
-    set (_name "${CMAKE_PROJECT_NAME}")
+function (_CMS_GET_EXECUTABLE_NAME_AND_TYPE _name _type)
+  if (ARGN)
+    list (GET ARGN 0 ${_name})
+    list (REMOVE_AT ARGN 0)
   endif ()
 
-  CMS_BEGIN_TARGET("${_name}")
+  if (ARGN)
+    list (GET ARGN 0 ${_type})
+    list (REMOVE_AT ARGN 0)
+  endif ()
 
-  set (CMS_CURRENT_EXECUTABLE_NAME "${_name}")
-  unset (_name)
+  CMS_PROMOTE_TO_PARENT_SCOPE(${_name})
+  CMS_PROMOTE_TO_PARENT_SCOPE(${_type})
+endfunction ()
+
+macro (CMS_BEGIN_EXECUTABLE)
+  CMS_CHECK_PREFIX()
+  _CMS_GET_EXECUTABLE_NAME_AND_TYPE(CMS_CURRENT_EXECUTABLE_NAME
+                                    CMS_CURRENT_EXECUTABLE_TYPE
+                                    ${ARGN})
+
+  if (NOT CMS_CURRENT_EXECUTABLE_NAME)
+    set (CMS_CURRENT_EXECUTABLE_NAME "${CMAKE_PROJECT_NAME}")
+  endif ()
+
+  if (NOT CMS_CURRENT_EXECUTABLE_TYPE)
+    set (CMS_CURRENT_EXECUTABLE_TYPE COMMAND)
+  endif ()
+
+  CMS_BEGIN_TARGET("${CMS_CURRENT_EXECUTABLE_NAME}")
 endmacro ()
 
 macro (CMS_ENABLE_TESTING)
@@ -460,6 +479,14 @@ macro (_CMS_FLUSH_TARGET_SETTINGS)
                                 ${CMS_DEFINITIONS})
   endif ()
 
+  if (WIN32)
+    if (CMS_CURRENT_EXECUTABLE_TYPE STREQUAL "GUI")
+      set_target_properties ("${CMS_CURRENT_TARGET_NAME}"
+                             PROPERTIES
+                             LINK_FLAGS "/ENTRY:mainCRTStartup")
+    endif ()
+  endif ()
+
   if (MSVC)
     if (NOT CMS_DISABLE_MSVC_DEFAULT_OPTIONS)
       target_compile_options ("${CMS_CURRENT_TARGET_NAME}" PUBLIC
@@ -485,6 +512,22 @@ macro (_CMS_FLUSH_TARGET_SETTINGS)
   CMS_MAP_CLEAR(CMS_SOURCE_DEFINITIONS)
 endmacro ()
 
+function (_CMS_ADD_EXECUTABLE)
+  unset (_options)
+
+  if (WIN32)
+    if (CMS_CURRENT_EXECUTABLE_TYPE STREQUAL "GUI")
+      set (_options WIN32)
+    endif ()
+  endif ()
+
+  add_executable ("${CMS_CURRENT_TARGET_NAME}"
+                  ${_options}
+                  ${CMS_SOURCE_FILES}
+                  ${CMS_GENERATED_FILES}
+                  ${CMS_ADDITIONAL_FILES})
+endfunction ()
+
 macro (CMS_END_EXECUTABLE)
   CMS_CHECK_PREFIX()
   CMS_CHECK_EXECUTABLE()
@@ -492,10 +535,10 @@ macro (CMS_END_EXECUTABLE)
   CMS_RESOLVE_DEPENDENCIES()
   CMS_APPLY_DEPENDENCIES()
 
-  add_executable ("${CMS_CURRENT_TARGET_NAME}"
-                  ${CMS_SOURCE_FILES}
-                  ${CMS_GENERATED_FILES}
-                  ${CMS_ADDITIONAL_FILES})
+  _CMS_ADD_EXECUTABLE("${CMS_CURRENT_TARGET_NAME}"
+                      ${CMS_SOURCE_FILES}
+                      ${CMS_GENERATED_FILES}
+                      ${CMS_ADDITIONAL_FILES})
 
   CMS_APPLY_LINKAGES()
   _CMS_FLUSH_TARGET_SETTINGS()
