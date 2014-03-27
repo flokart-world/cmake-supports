@@ -213,6 +213,7 @@ endmacro ()
 macro (CMS_BEGIN_TARGET _name)
   set (CMS_CURRENT_TARGET_NAME "${_name}")
   unset (CMS_SOURCE_FILES)
+  unset (CMS_OBJECT_FILES)
 endmacro ()
 
 macro (CMS_CHECK_TARGET)
@@ -243,7 +244,7 @@ function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS)
       list (REMOVE_AT ARGN 0)
 
       if (_arg STREQUAL "WARNINGS")
-        break()
+        break ()
       else ()
         list (APPEND _files "${_arg}")
       endif ()
@@ -329,7 +330,21 @@ function (CMS_ADD_SOURCE_FILES)
   endif ()
 endfunction ()
 
+function (CMS_ADD_OBJECT_FILES)
+  if (ARGN)
+    foreach (_file IN LISTS ARGN)
+      get_filename_component (_fullpath "${_file}" ABSOLUTE)
+      list (APPEND CMS_OBJECT_FILES "${_fullpath}")
+    endforeach ()
+
+    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_OBJECT_FILES)
+  else ()
+    message (FATAL_ERROR "No object files are specified.")
+  endif ()
+endfunction ()
+
 macro (_CMS_END_TARGET)
+  unset (CMS_OBJECT_FILES)
   unset (CMS_SOURCE_FILES)
   unset (CMS_CURRENT_TARGET_NAME)
 endmacro ()
@@ -358,6 +373,10 @@ function (_CMS_FLUSH_SOURCE_SPECIFIC_SETTINGS)
     CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS("${CMS_SOURCE_FLAGS_KEYS}"
                                            WARNINGS
                                            "${CMS_DISABLED_MSVC_WARNINGS}")
+  endif ()
+
+  if (CMS_OBJECT_FILES)
+    set_source_files_properties (${CMS_OBJECT_FILES} PROPERTIES GENERATED true)
   endif ()
 
   CMS_SFFM_WRITE(CMS_SOURCE_FLAGS COMPILE_FLAGS)
@@ -432,6 +451,7 @@ macro (CMS_END_LIBRARY)
 
   add_library ("${CMS_CURRENT_TARGET_NAME}"
                ${CMS_SOURCE_FILES}
+               ${CMS_OBJECT_FILES}
                ${CMS_ADDITIONAL_FILES})
 
   _CMS_FLUSH_TARGET_SETTINGS()
