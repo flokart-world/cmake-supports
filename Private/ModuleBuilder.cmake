@@ -411,11 +411,6 @@ macro (_CMS_FLUSH_TARGET_SETTINGS)
           $<$<NOT:$<CONFIG:Debug>>:/GL /GS->)
       target_compile_options ("${CMS_CURRENT_TARGET_NAME}" PUBLIC
           /W4 /fp:fast)
-      set_target_properties ("${CMS_CURRENT_TARGET_NAME}" PROPERTIES
-                             LINK_FLAGS
-                             "/LTCG"
-                             LINK_FLAGS_DEBUG
-                             "/LTCG-")
     endif ()
 
     _CMS_FLUSH_DISABLED_MSVC_WARNINGS()
