@@ -75,6 +75,7 @@ elseif(LIBXML2_INCLUDE_DIR AND EXISTS "${LIBXML2_INCLUDE_DIR}/libxml/xmlversion.
 endif()
 
 set (LIBXML2_LIBRARY_DIR "${PC_LIBXML_LIBDIR}" CACHE PATH "")
+list (APPEND LIBXML2_LIBRARIES ${PC_LIBXML_LIBRARIES})
 
 # handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE if
 # all listed variables are TRUE
