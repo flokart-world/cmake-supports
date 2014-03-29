@@ -27,12 +27,13 @@ macro (CMS_REPLACE_MODULE_DIRS _prefix _old_include _old_lib)
   list (APPEND ${_prefix}_LIBRARY_DIRS "${${_prefix}_LIBRARY_DIR}")
 endmacro ()
 
-macro (CMS_PROMOTE_MODULE_DIRS _prefix)
+macro (CMS_PROMOTE_MODULE_DEFS _prefix)
   CMS_PROMOTE_TO_GLOBAL(${_prefix}_INCLUDE_DIRS)
   CMS_PROMOTE_TO_GLOBAL(${_prefix}_LIBRARY_DIRS)
+  CMS_PROMOTE_TO_GLOBAL(${_prefix}_LIBRARIES)
 endmacro ()
 
-function (CMS_CONVERT_PACKAGE_DIRS _prefix _pc_prefix)
+function (CMS_CONVERT_PACKAGE_DEFS _prefix _pc_prefix)
   # Workaround against the issue where paths with spaces becomes lists.
   CMS_JOIN(_include " " ${${_pc_prefix}_INCLUDEDIR})
   CMS_JOIN(_lib " " ${${_pc_prefix}_LIBDIR})
@@ -46,10 +47,11 @@ function (CMS_CONVERT_PACKAGE_DIRS _prefix _pc_prefix)
 
   set (${_prefix}_INCLUDE_DIRS "${${_pc_prefix}_INCLUDE_DIRS}")
   set (${_prefix}_LIBRARY_DIRS "${${_pc_prefix}_LIBRARY_DIRS}")
+  set (${_prefix}_LIBRARIES "${${_pc_prefix}_LIBRARIES}")
   CMS_REPLACE_MODULE_DIRS(${_prefix}
                           "${${_pc_prefix}_INCLUDEDIR}"
                           "${${_pc_prefix}_LIBDIR}")
-  CMS_PROMOTE_MODULE_DIRS(${_prefix})
+  CMS_PROMOTE_MODULE_DEFS(${_prefix})
 endfunction ()
 
 function (CMS_FIND_PACKAGE _prefix _package)
@@ -61,6 +63,6 @@ function (CMS_FIND_PACKAGE _prefix _package)
          PARENT_SCOPE)
     set (${_prefix}_FOUND true
          PARENT_SCOPE)
-    CMS_CONVERT_PACKAGE_DIRS(${_prefix} _cms_pc_${_prefix})
+    CMS_CONVERT_PACKAGE_DEFS(${_prefix} _cms_pc_${_prefix})
   endif ()
 endfunction ()

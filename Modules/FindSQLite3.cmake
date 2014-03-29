@@ -20,7 +20,6 @@
 #    distribution.
 
 CMS_FIND_PACKAGE(SQLITE3 sqlite3)
-set (SQLITE3_LIBRARIES "${SQLITE3_LIBRARY_DIR}/sqlite3")
 
 include (FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SQLite3
