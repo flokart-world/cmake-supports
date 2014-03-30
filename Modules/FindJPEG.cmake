@@ -49,24 +49,28 @@ find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h
           "${PC_JPEG_INCLUDE_DIRS}")
 
 set (JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
-set (JPEG_LIBRARY_DIR "${PC_JPEG_INCLUDEDIR}" CACHE PATH "")
+set (JPEG_LIBRARY_DIR "${PC_JPEG_LIBDIR}" CACHE PATH "")
 
 find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES}
-          HINTS
-          "${PC_JPEG_LIBDIR}"
-          "${PC_JPEG_LIBRARY_DIRS}")
+              HINTS
+              "${PC_JPEG_LIBDIR}"
+              "${PC_JPEG_LIBDIR}/Release"
+              "${PC_JPEG_LIBDIR}/Debug"
+              "${PC_JPEG_LIBRARY_DIRS}")
+
+get_filename_component (JPEG_LIBRARY_NAME "${JPEG_LIBRARY}" NAME)
+set (JPEG_LIBRARIES "${PC_JPEG_LIBRARIES}")
+list (REMOVE_ITEM JPEG_LIBRARIES ${JPEG_NAMES})
+list (APPEND JPEG_LIBRARIES "${JPEG_LIBRARY_NAME}")
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(JPEG DEFAULT_MSG
                                   JPEG_LIBRARY
+                                  JPEG_LIBRARIES
                                   JPEG_LIBRARY_DIR
                                   JPEG_INCLUDE_DIR)
-
-if(JPEG_FOUND)
-  set(JPEG_LIBRARIES ${JPEG_LIBRARY})
-endif()
 
 # Deprecated declarations.
 set (NATIVE_JPEG_INCLUDE_PATH ${JPEG_INCLUDE_DIR} )
