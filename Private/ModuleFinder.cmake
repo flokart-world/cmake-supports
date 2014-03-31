@@ -28,6 +28,10 @@ macro (CMS_APPEND_PREFIX _prefix)
   list (APPEND CMS_IMPORTED_PREFIXES ${_prefix})
 endmacro ()
 
+macro (CMS_APPEND_PACKAGE _package _prefix)
+  CMS_MAP_PUT(CMS_IMPORTED_PACKAGES ${_package} ${_prefix})
+endmacro ()
+
 function (CMS_PARSE_MODULE_ARGN _var_prefix _prefix)
   set (_module ${_prefix})
   set (_package ${_prefix})
@@ -80,6 +84,7 @@ macro (CMS_IMPORT_MODULE _prefix)
 
   if (${_prefix}_FOUND)
     CMS_APPEND_PREFIX(${_prefix})
+    CMS_APPEND_PACKAGE(${_cms_arg_module} ${_prefix})
   endif ()
 
   unset (_cms_arg_module)
@@ -151,20 +156,30 @@ function (CMS_DIVIDE_FIND_PACKAGE_ARGS _version _after)
 endfunction ()
 
 macro (CMS_IMPORT_BUNDLED_MODULE _prefix _directory)
-  CMS_DIVIDE_FIND_PACKAGE_ARGS(_cms_module _cms_argn ${ARGN})
+  CMS_DIVIDE_FIND_PACKAGE_ARGS(_cms_before _cms_argn ${ARGN})
 
   if (NOT BUILD_${_prefix})
-    CMS_IMPORT_MODULE(${_prefix} ${_cms_module} QUIET ${_cms_argn})
+    CMS_IMPORT_MODULE(${_prefix} ${_cms_before} QUIET ${_cms_argn})
   endif ()
 
   CMS_PREPARE_BUILD_OPTION("${_prefix}" "${_directory}")
 
   if (BUILD_${_prefix})
+    CMS_PARSE_MODULE_ARGN(_cms_arg ${_prefix} ${_cms_before})
+
     add_subdirectory ("${_directory}")
     set (${_prefix}_FOUND true)
 
     CMS_APPEND_PREFIX(${_prefix})
+    CMS_APPEND_PACKAGE(${_cms_arg_module} ${_prefix})
+
+    unset (_cms_arg_module)
+    unset (_cms_arg_package)
+    unset (_cms_arg_reminder)
   endif ()
+
+  unset (_cms_before)
+  unset (_cms_argn)
 endmacro ()
 
 macro (CMS_PROJECT_VAR_PREFIX _prefix)
@@ -197,3 +212,4 @@ endmacro ()
 # Each project shouldn't inherit the parent's settings.
 unset (CMS_CURRENT_PREFIX)
 unset (CMS_IMPORTED_PREFIXES)
+CMS_MAP_CLEAR(CMS_IMPORTED_PACKAGES)

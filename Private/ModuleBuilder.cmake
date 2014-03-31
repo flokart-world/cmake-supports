@@ -95,12 +95,14 @@ macro (CMS_LIBRARY_HEADERS)
 endmacro ()
 
 macro (CMS_ADD_LIBRARY_HEADERS)
-  message (WARNING "CMS_ADD_LIBRARY_HEADERS is obsolete. Use CMS_LIBRARY_HEADERS instead.")
+  message ("CMS_ADD_LIBRARY_HEADERS is obsolete."
+           " Use CMS_LIBRARY_HEADERS instead.")
   CMS_LIBRARY_HEADERS(${ARGN})
 endmacro ()
 
 function (CMS_INSTALL_LIBRARY_PACKAGE)
   CMS_CHECK_PREFIX()
+  message ("CMS_INSTALL_LIBRARY_PACKAGE is deprecated.")
 
   if (ARGN)
     list (GET ARGN 0 _name)
@@ -156,6 +158,7 @@ endfunction ()
 
 function (CMS_INSTALL_MODULE _name)
   CMS_CHECK_PREFIX()
+  message ("CMS_INSTALL_MODULE is deprecated. Use CMS_INSTALL_PACKAGE intead.")
 
   if (NOT CMS_CURRENT_VERSION)
     message (FATAL_ERROR "Set the project version.")
@@ -198,6 +201,58 @@ function (CMS_INSTALL_MODULE _name)
 
   install (FILES "${_module}" DESTINATION "${CMS_MODULE_DIR}")
   set (CMS_CURRENT_MODULE "${CMS_CURRENT_MODULE}" PARENT_SCOPE)
+endfunction ()
+
+function (CMS_INSTALL_PACKAGE _name)
+  CMS_CHECK_PREFIX()
+
+  if (NOT CMS_CURRENT_VERSION)
+    message (FATAL_ERROR "Set the project version.")
+  endif ()
+
+  set (CMS_CURRENT_PACKAGE "${_name}")
+
+  set (_var CMS_MODULE_${_name})
+  set (_filename "Find${_name}.cmake")
+
+  find_file (${_var} ${_filename}.in ${_filename}
+             PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
+                   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+             NO_DEFAULT_PATH)
+  mark_as_advanced (${_var})
+
+  unset (CMS_CURRENT_DEPENDENCY)
+  foreach (_package IN LISTS CMS_IMPORTED_PACKAGES_KEYS)
+    CMS_MAP_GET(_prefix CMS_IMPORTED_PACKAGES "${_package}")
+    list (APPEND CMS_CURRENT_DEPENDENCY "${_prefix}" "${_package}")
+  endforeach ()
+
+  unset (CMS_CURRENT_COMPONENTS)
+  foreach (_name IN LISTS ${CMS_PROJECT_COMPONENTS}_KEYS)
+    CMS_MAP_GET(_library ${CMS_PROJECT_COMPONENTS} "${_name}")
+    list (APPEND CMS_CURRENT_COMPONENTS "${_name}" "${_library}")
+  endforeach ()
+
+  if (${_var})
+    set (_input "${${_var}}")
+    get_filename_component (_ext "${_input}" EXT)
+
+    if (_ext STREQUAL ".cmake.in")
+      set (_configure true)
+    else ()
+      set (_package "${_input}")
+    endif ()
+  else ()
+    set (_input "${CMS_PRIVATE_DIR}/DefaultPackage.cmake.in")
+    set (_configure true)
+  endif ()
+
+  if (_configure)
+    set (_package "${PROJECT_BINARY_DIR}/${_filename}")
+    configure_file (${_input} "${_package}" @ONLY)
+  endif ()
+
+  install (FILES "${_package}" DESTINATION "${CMS_MODULE_DIR}")
 endfunction ()
 
 macro (CMS_APPLY_DEPENDENCIES)
@@ -419,7 +474,19 @@ endfunction ()
 
 function (CMS_APPLY_LINKAGES)
   if (CMS_LINKAGES)
-    target_link_libraries("${CMS_CURRENT_TARGET_NAME}" ${CMS_LINKAGES})
+    unset (_list)
+
+    foreach (_linkage IN LISTS CMS_LINKAGES)
+      CMS_MAP_GET(_library CMS_IMPORTED_COMPONENTS "${_linkage}")
+
+      if (_library)
+        list (APPEND _list "${_library}")
+      else ()
+        list (APPEND _list "${_linkage}")
+      endif ()
+    endforeach ()
+
+    target_link_libraries("${CMS_CURRENT_TARGET_NAME}" ${_list})
   endif ()
 endfunction ()
 
@@ -436,15 +503,29 @@ macro (_CMS_END_LIBRARY_C)
                          "${CMS_CURRENT_LIBRARY_NAME}"
                          OUTPUT_NAME_DEBUG
                          "${CMS_CURRENT_LIBRARY_NAME}d")
+
+  CMS_MAP_PUT(${CMS_PROJECT_COMPONENTS} "${CMS_CURRENT_TARGET_NAME}"
+              "${CMS_CURRENT_LIBRARY_NAME}$<$<CONFIG:Debug>:d>")
 endmacro ()
 
 macro (_CMS_END_LIBRARY_CXX)
+  if (WIN32)
+    set (_output_name "lib${CMS_CURRENT_LIBRARY_NAME}")
+  else ()
+    set (_output_name "${CMS_CURRENT_LIBRARY_NAME}")
+  endif ()
+
   set_target_properties ("${CMS_CURRENT_TARGET_NAME}"
       PROPERTIES LINKER_LANGUAGE CXX
       OUTPUT_NAME
-      "lib${CMS_CURRENT_LIBRARY_NAME}${CMS_CURRENT_LIBRARY_SUFFIX}"
+      "${_output_name}${CMS_CURRENT_LIBRARY_SUFFIX}"
       OUTPUT_NAME_DEBUG
-      "lib${CMS_CURRENT_LIBRARY_NAME}-gd${CMS_CURRENT_LIBRARY_SUFFIX}")
+      "${_output_name}-gd${CMS_CURRENT_LIBRARY_SUFFIX}")
+
+  CMS_MAP_PUT(${CMS_PROJECT_COMPONENTS} "${CMS_CURRENT_TARGET_NAME}"
+      "${_output_name}$<$<CONFIG:Debug>:-gd>${CMS_CURRENT_LIBRARY_SUFFIX}")
+
+  unset (_output_name)
 endmacro ()
 
 function (_CMS_FLUSH_SOURCE_SPECIFIC_SETTINGS)
@@ -634,6 +715,20 @@ macro (CMS_END_LIBRARY)
   _CMS_END_TARGET()
 endmacro ()
 
+macro (CMS_BEGIN_COMPONENTS)
+endmacro ()
+
+macro (CMS_END_COMPONENTS)
+  if (CMS_IS_COMPONENT_DIR)
+    CMS_MAP_PROMOTE_TO_PARENT_SCOPE(${CMS_PROJECT_COMPONENTS})
+  endif ()
+endmacro ()
+
+macro (CMS_ADD_COMPONENT_DIRECTORY _dir)
+  set (CMS_IS_COMPONENT_DIR true)
+  add_subdirectory ("${_dir}")
+endmacro ()
+
 # Each project shouldn't inherit the parent's settings.
 
 CMS_MAP_CLEAR(CMS_HEADER_GROUPS)
@@ -642,3 +737,8 @@ unset (CMS_CURRENT_VERSION)
 unset (CMS_DISABLED_MSVC_WARNINGS)
 unset (CMS_DEFINITIONS)
 unset (CMS_CURRENT_PUBLIC_DIR)
+
+CMS_NEW_OBJECT(CMS_PROJECT_COMPONENTS)
+CMS_MAP_PUT(CMS_ALL_COMPONENTS "${PROJECT_NAME}" ${CMS_PROJECT_COMPONENTS})
+
+CMS_MAP_CLEAR(CMS_IMPORTED_COMPONENTS)

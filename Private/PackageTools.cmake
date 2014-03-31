@@ -64,3 +64,113 @@ function (CMS_FIND_PACKAGE _prefix _package)
     CMS_CONVERT_PACKAGE_DEFS(${_prefix} _cms_pc_${_prefix})
   endif ()
 endfunction ()
+
+function (_CMS_CHECK_PACKAGE)
+  if (NOT CMS_PACKAGE_DIR)
+    message (FATAL_ERROR "Not in a package scope.")
+  endif ()
+endfunction ()
+
+function (_CMS_CHECK_PACKAGE_PREFIX)
+  if (NOT CMS_PACKAGE_PREFIX)
+    message (FATAL_ERROR "Call CMS_SET_PACKAGE_PREFIX first.")
+  endif ()
+endfunction ()
+
+function (CMS_BEGIN_PACKAGE _directory)
+  # CMS_BEGIN_PACKAGE may be nested within CMS_IMPORT_MODULE.
+  list (INSERT CMS_PACKAGE_STACK 0 "${CMS_PACKAGE_DIR}"
+                                   "${CMS_PACKAGE_PREFIX}"
+                                   "${CMS_PACKAGE_DEPENDENCY}")
+  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_STACK)
+
+  set (CMS_PACKAGE_DIR "${_directory}" PARENT_SCOPE)
+  set (CMS_PACKAGE_PREFIX "" PARENT_SCOPE)
+  CMS_NEW_OBJECT(CMS_PACKAGE_DEPENDENCY)
+  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_DEPENDENCY)
+endfunction ()
+
+function (CMS_SET_PACKAGE_PREFIX _prefix)
+  _CMS_CHECK_PACKAGE()
+  set (CMS_PACKAGE_PREFIX "${_prefix}" PARENT_SCOPE)
+endfunction ()
+
+function (CMS_SET_PACKAGE_VERSION _version)
+  _CMS_CHECK_PACKAGE()
+  _CMS_CHECK_PACKAGE_PREFIX()
+  set (${CMS_PACKAGE_PREFIX}_VERSION_STRING "${_version}" PARENT_SCOPE)
+endfunction ()
+
+function (CMS_SET_PACKAGE_DEPENDENCY)
+  _CMS_CHECK_PACKAGE()
+
+  while (ARGN)
+    list (GET ARGN 0 _prefix)
+    list (GET ARGN 1 _package)
+    list (REMOVE_AT ARGN 0 1)
+    CMS_IMPORT_MODULE(${_prefix} NAME ${_package})
+    CMS_SET_ADD(${CMS_PACKAGE_DEPENDENCY} ${_prefix})
+  endwhile ()
+
+  CMS_PROMOTE_TO_PARENT_SCOPE(${CMS_PACKAGE_DEPENDENCY})
+endfunction ()
+
+function (CMS_SET_PACKAGE_COMPONENTS)
+  _CMS_CHECK_PACKAGE()
+
+  while (ARGN)
+    list (GET ARGN 0 _component)
+    list (GET ARGN 1 _library)
+    list (REMOVE_AT ARGN 0 1)
+    CMS_MAP_PUT(CMS_IMPORTED_COMPONENTS "${_component}" "${_library}")
+  endwhile ()
+
+  CMS_MAP_PROMOTE_TO_PARENT_SCOPE(CMS_IMPORTED_COMPONENTS)
+endfunction ()
+
+function (CMS_END_PACKAGE)
+  _CMS_CHECK_PACKAGE()
+  _CMS_CHECK_PACKAGE_PREFIX()
+
+  unset (${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS CACHE)
+  unset (${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS CACHE)
+
+  set (${CMS_PACKAGE_PREFIX}_INCLUDE_DIR "${CMS_PACKAGE_DIR}/include"
+       CACHE PATH "Where the ${CMS_PACKAGE_PREFIX} headers are placed.")
+  set (${CMS_PACKAGE_PREFIX}_LIBRARY_DIR "${CMS_PACKAGE_DIR}/lib"
+       CACHE PATH "Where the ${CMS_PACKAGE_PREFIX} binaries are placed.")
+
+  set (${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS
+       "${${CMS_PACKAGE_PREFIX}_INCLUDE_DIR}")
+  set (${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS
+       "${${CMS_PACKAGE_PREFIX}_LIBRARY_DIR}")
+
+  if (${CMS_PACKAGE_DEPENDENCY})
+    foreach (_prefix IN LISTS ${CMS_PACKAGE_DEPENDENCY})
+      list (APPEND ${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS
+                   "${${_prefix}_INCLUDE_DIRS}")
+      list (APPEND ${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS
+                   "${${_prefix}_LIBRARY_DIRS}")
+    endforeach ()
+  endif ()
+
+  list (REMOVE_DUPLICATES ${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS)
+  list (REMOVE_ITEM ${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS "")
+  list (REMOVE_DUPLICATES ${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS)
+  list (REMOVE_ITEM ${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS "")
+
+  CMS_PROMOTE_TO_GLOBAL(${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS)
+  CMS_PROMOTE_TO_GLOBAL(${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS)
+
+  set (${CMS_PACKAGE_PREFIX}_FOUND true PARENT_SCOPE)
+
+  list (GET CMS_PACKAGE_STACK 0 CMS_PACKAGE_DIR)
+  list (GET CMS_PACKAGE_STACK 1 CMS_PACKAGE_PREFIX)
+  list (GET CMS_PACKAGE_STACK 2 CMS_PACKAGE_DEPENDENCY)
+  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_DIR)
+  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_PREFIX)
+  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_DEPENDENCY)
+
+  list (REMOVE_AT CMS_PACKAGE_STACK 0 1 2)
+  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_STACK)
+endfunction ()
