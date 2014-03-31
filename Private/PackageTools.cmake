@@ -23,8 +23,8 @@ macro (CMS_REPLACE_MODULE_DIRS _prefix _old_include _old_lib)
   list (REMOVE_ITEM ${_prefix}_INCLUDE_DIRS ${_old_include})
   list (REMOVE_ITEM ${_prefix}_LIBRARY_DIRS ${_old_lib})
 
-  list (APPEND ${_prefix}_INCLUDE_DIRS "${${_prefix}_INCLUDE_DIR}")
-  list (APPEND ${_prefix}_LIBRARY_DIRS "${${_prefix}_LIBRARY_DIR}")
+  list (INSERT ${_prefix}_INCLUDE_DIRS 0 "${${_prefix}_INCLUDE_DIR}")
+  list (INSERT ${_prefix}_LIBRARY_DIRS 0 "${${_prefix}_LIBRARY_DIR}")
 endmacro ()
 
 macro (CMS_PROMOTE_MODULE_DEFS _prefix)
@@ -48,9 +48,7 @@ function (CMS_CONVERT_PACKAGE_DEFS _prefix _pc_prefix)
   set (${_prefix}_INCLUDE_DIRS "${${_pc_prefix}_INCLUDE_DIRS}")
   set (${_prefix}_LIBRARY_DIRS "${${_pc_prefix}_LIBRARY_DIRS}")
   set (${_prefix}_LIBRARIES "${${_pc_prefix}_LIBRARIES}")
-  CMS_REPLACE_MODULE_DIRS(${_prefix}
-                          "${${_pc_prefix}_INCLUDEDIR}"
-                          "${${_pc_prefix}_LIBDIR}")
+  CMS_REPLACE_MODULE_DIRS(${_prefix} "${_include}" "${_lib}")
   CMS_PROMOTE_MODULE_DEFS(${_prefix})
 endfunction ()
 

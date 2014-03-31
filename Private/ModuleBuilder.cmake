@@ -594,18 +594,6 @@ function (_CMS_ADD_LIBRARY _target)
   endif ()
 endfunction ()
 
-function (CMS_REPLACE_INCLUDE_DIR _list)
-  unset (${_list})
-
-  if (${CMS_CURRENT_PREFIX}_INCLUDE_DIR)
-    set (_olddir "${${CMS_CURRENT_PREFIX}_INCLUDE_DIR}")
-    set (${_list} "${${CMS_CURRENT_PREFIX}_INCLUDE_DIRS}")
-    list (REMOVE_ITEM ${_list} "${_olddir}")
-  endif ()
-
-  CMS_PROMOTE_TO_PARENT_SCOPE(${_list})
-endfunction ()
-
 macro (CMS_END_LIBRARY)
   CMS_CHECK_PREFIX()
   CMS_CHECK_LIBRARY()
@@ -613,18 +601,18 @@ macro (CMS_END_LIBRARY)
   CMS_RESOLVE_DEPENDENCIES()
 
   if (CMS_CURRENT_PUBLIC_DIR)
-    CMS_REPLACE_INCLUDE_DIR(CMS_CURRENT_INCLUDE_DIRS)
     set (${CMS_CURRENT_PREFIX}_INCLUDE_DIR
          "${CMS_CURRENT_PUBLIC_DIR}" CACHE PATH "" FORCE)
     mark_as_advanced (${CMS_CURRENT_PREFIX}_INCLUDE_DIR)
-    set (${CMS_CURRENT_PREFIX}_INCLUDE_DIRS
-         "${CMS_CURRENT_INCLUDE_DIRS}"
-         "${CMS_CURRENT_PUBLIC_DIR}"
-         CACHE INTERNAL "" FORCE)
-    unset (CMS_CURRENT_INCLUDE_DIRS)
+    list (INSERT ${CMS_CURRENT_PREFIX}_INCLUDE_DIRS
+                 0 "${CMS_CURRENT_PUBLIC_DIR}")
+    CMS_PROMOTE_TO_GLOBAL(${CMS_CURRENT_PREFIX}_INCLUDE_DIRS)
   else ()
     message (FATAL_ERROR "No library headers added.")
   endif ()
+
+  unset (${CMS_CURRENT_PREFIX}_LIBRARY_DIR CACHE)
+  unset (${CMS_CURRENT_PREFIX}_LIBRARY_DIRS CACHE)
 
   CMS_APPLY_DEPENDENCIES()
 
