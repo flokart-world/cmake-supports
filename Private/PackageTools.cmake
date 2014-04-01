@@ -20,8 +20,8 @@
 #    distribution.
 
 macro (CMS_REPLACE_MODULE_DIRS _prefix _old_include _old_lib)
-  list (REMOVE_ITEM ${_prefix}_INCLUDE_DIRS ${_old_include})
-  list (REMOVE_ITEM ${_prefix}_LIBRARY_DIRS ${_old_lib})
+  list (REMOVE_ITEM ${_prefix}_INCLUDE_DIRS "${_old_include}")
+  list (REMOVE_ITEM ${_prefix}_LIBRARY_DIRS "${_old_lib}")
 
   list (INSERT ${_prefix}_INCLUDE_DIRS 0 "${${_prefix}_INCLUDE_DIR}")
   list (INSERT ${_prefix}_LIBRARY_DIRS 0 "${${_prefix}_LIBRARY_DIR}")
