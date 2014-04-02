@@ -560,7 +560,7 @@ macro (_CMS_FLUSH_TARGET_SETTINGS)
                                 ${CMS_DEFINITIONS})
   endif ()
 
-  if (WIN32)
+  if (WIN32 AND NOT CMS_WIN32_USE_WINMAIN)
     if (CMS_CURRENT_EXECUTABLE_TYPE STREQUAL "GUI")
       set_target_properties ("${CMS_CURRENT_TARGET_NAME}"
                              PROPERTIES
