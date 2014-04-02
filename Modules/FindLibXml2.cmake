@@ -76,6 +76,7 @@ endif()
 
 set (LIBXML2_LIBRARY_DIR "${PC_LIBXML_LIBDIR}" CACHE PATH "")
 list (APPEND LIBXML2_LIBRARIES ${PC_LIBXML_LIBRARIES})
+list (REMOVE_DUPLICATES LIBXML2_LIBRARIES)
 
 # handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE if
 # all listed variables are TRUE
