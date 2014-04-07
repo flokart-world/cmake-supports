@@ -600,6 +600,8 @@ function (_CMS_ADD_EXECUTABLE)
     if (CMS_CURRENT_EXECUTABLE_TYPE STREQUAL "GUI")
       set (_options WIN32)
     endif ()
+  elseif (APPLE AND DARWIN_MAJOR_VERSION GREATER 9)
+    set (_options MACOSX_BUNDLE)
   endif ()
 
   add_executable ("${CMS_CURRENT_TARGET_NAME}"
