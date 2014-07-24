@@ -22,8 +22,6 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
   include (CMakePackageConfigHelpers)
 
   function (CMS_BUILD_MODULE _name)
-    message (STATUS "Exporting the module ${_name}.")
-
     set (_module "${CMAKE_CURRENT_BINARY_DIR}/Find${_name}.cmake")
 
     set (_cmakeDir "share/cmake/${_name}")
@@ -39,8 +37,6 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
     CMS_GET_PROPERTY(_providedTargets ProvidedTargets)
     CMS_GET_PROPERTY(_version Version)
     CMS_GET_PROPERTY(_compatibility Compatibility)
-
-    CMS_ENSURE_PACKAGES(${_requiredPackages})
 
     WRITE_BASIC_PACKAGE_VERSION_FILE(${_cmakeConfigVersion}
                                      VERSION ${_version}
