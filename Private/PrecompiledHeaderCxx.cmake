@@ -16,10 +16,9 @@
 #    2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 
-#    3. This notice may not be removed or altered from any source
-#    distribution.
+#    3. This notice may not be removed or altered from any source distribution.
 
-function (CMS_PRECOMPILE_HEADER_CXX _header)
+function (CMS_PRECOMPILE_HEADER_CXX_OLD _header)
   CMS_CHECK_PREFIX()
   CMS_CHECK_TARGET()
 
@@ -50,6 +49,45 @@ function (CMS_PRECOMPILE_HEADER_CXX _header)
   else ()
     file (WRITE "${_header_file}"
           "// Precompiled header is disabled or not supported.")
+  endif ()
+endfunction ()
+
+function (CMS_PRECOMPILE_HEADER_CXX _headerFile)
+
+  # TODO : Delete them.
+  CMS_GET_PROPERTY(_type Type)
+  if (_type STREQUAL "None")
+    CMS_PRECOMPILE_HEADER_CXX_OLD(${_headerFile})
+    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PCH_CXX_SOURCE)
+    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PCH_CXX_HEADER)
+    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_ADDITIONAL_FILES)
+    CMS_OBJMAP_PROMOTE_TO_PARENT_SCOPE(CMS_SOURCE_FLAGS)
+    return ()
+  endif ()
+
+  set (_headerPath "${CMAKE_CURRENT_BINARY_DIR}/${_headerFile}")
+  CMS_INCLUDE_DIRECTORIES(PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+  if (MSVC AND USE_PRECOMPILED_HEADER)
+    configure_file ("${_headerFile}.in" ${_headerPath} @ONLY)
+
+    get_filename_component (_headerName ${_headerFile} NAME_WE)
+    set (_sourcePath "${CMAKE_CURRENT_BINARY_DIR}/${_headerName}.cpp")
+    set (CMS_PCH_CXX_HEADER ${_headerFile})
+    configure_file ("${CMS_PRIVATE_DIR}/PrecompiledHeader.cpp.in"
+                    ${_sourcePath} @ONLY)
+
+    CMS_ADD_COMPILE_OPTIONS(PRIVATE "/Yu\"${_headerFile}\"")
+    CMS_ADD_SOURCE_FILES("${_headerFile}.in" ${_sourcePath} NO_GROUP)
+    CMS_APPEND_TO_SOURCE_FILE_PROPERTY(${_sourcePath}
+                                       CompileOptions "/Yc\"${_headerFile}\"")
+
+    set (CMS_PCH_CXX_SOURCE ${_sourcePath} PARENT_SCOPE)
+  else ()
+    file (WRITE ${_headerPath}
+          "// Precompiled header is disabled or not supported.")
+
+    set (CMS_PCH_CXX_SOURCE "" PARENT_SCOPE)
   endif ()
 endfunction ()
 

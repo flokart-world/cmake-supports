@@ -18,16 +18,8 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-set (PACKAGE_VERSION 0.0.4)
+CMS_DEFINE_CMAKE_PROPERTY(GLOBAL PROPERTY CMS::DefaultCompilerOptions)
 
-if (PACKAGE_FIND_VERSION)
-  if (PACKAGE_VERSION VERSION_LESS PACKAGE_FIND_VERSION)
-    set (PACKAGE_VERSION_COMPATIBLE false)
-  else ()
-    set (PACKAGE_VERSION_COMPATIBLE true)
-
-    if (PACKAGE_VERSION VERSION_EQUAL PACKAGE_FIND_VERSION)
-      set (PACKAGE_VERSION_EXACT true)
-    endif ()
-  endif ()
+if (MSVC)
+  include ("${CMAKE_CURRENT_LIST_DIR}/Compilers/MSVC.cmake")
 endif ()

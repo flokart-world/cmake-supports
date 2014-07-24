@@ -16,15 +16,20 @@
 #    2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 
-#    3. This notice may not be removed or altered from any source
-#    distribution.
+#    3. This notice may not be removed or altered from any source distribution.
 
-CMS_FIND_PACKAGE(@CMS_CURRENT_PREFIX@ @CMS_CURRENT_PACKAGE@)
+if (CMS_SCOPE_CALL STREQUAL "INIT")
+  # Nothing to do
+elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
+  list (GET ARGN 0 _name)
 
-include (FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(@CMS_CURRENT_MODULE@
-                                  REQUIRED_VARS
-                                  @CMS_CURRENT_PREFIX@_INCLUDE_DIR
-                                  @CMS_CURRENT_PREFIX@_LIBRARY_DIR
-                                  VERSION_VAR
-                                  @CMS_CURRENT_PREFIX@_VERSION_STRING)
+  CMS_DEFINE_EXECUTABLE(${_name})
+  CMS_INHERIT_PROPERTY(ExportName)
+
+  CMS_STACK_PUSH("${_name}")
+elseif (CMS_SCOPE_CALL STREQUAL "END")
+  CMS_STACK_POP(_name)
+
+  CMS_SUBMIT_EXECUTABLE(${_name})
+  CMS_APPEND_TO_PARENT_PROPERTY(ProvidedTargets ${_name})
+endif ()

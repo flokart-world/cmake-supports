@@ -18,16 +18,22 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-set (PACKAGE_VERSION 0.0.4)
+if (CMS_SCOPE_CALL STREQUAL "INIT")
+  # Nothing to do
+elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
+  list (GET ARGN 0 _name)
 
-if (PACKAGE_FIND_VERSION)
-  if (PACKAGE_VERSION VERSION_LESS PACKAGE_FIND_VERSION)
-    set (PACKAGE_VERSION_COMPATIBLE false)
-  else ()
-    set (PACKAGE_VERSION_COMPATIBLE true)
+  message (STATUS "Entering the C library ${_name}.")
 
-    if (PACKAGE_VERSION VERSION_EQUAL PACKAGE_FIND_VERSION)
-      set (PACKAGE_VERSION_EXACT true)
-    endif ()
-  endif ()
+  CMS_DEFINE_LIBRARY("${_name}")
+  CMS_SET_PROPERTY(LinkerLanguage C)
+  CMS_SET_PROPERTY(OutputName "${_name}$<$<CONFIG:Debug>:d>")
+
+  CMS_STACK_PUSH("${_name}")
+elseif (CMS_SCOPE_CALL STREQUAL "END")
+  CMS_STACK_POP(_name)
+
+  CMS_SUBMIT_LIBRARY("${_name}")
+
+  message (STATUS "Leaving the C library ${_name}.")
 endif ()

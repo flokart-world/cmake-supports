@@ -16,16 +16,11 @@
 #    2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 
-#    3. This notice may not be removed or altered from any source
-#    distribution.
+#    3. This notice may not be removed or altered from any source distribution.
 
-prefix=@CMAKE_INSTALL_PREFIX@
-libdir=${prefix}/lib
-includedir=${prefix}/include
-
-Name: @CMS_CURRENT_PACKAGE@
-Version: @CMS_CURRENT_VERSION@
-Description: @CMS_PACKAGE_DESCRIPTION@
-Requires: @CMS_REQUIRED_PACKAGES@
-Libs: "-L${libdir}"
-Cflags: "-I${includedir}"
+set_property (GLOBAL PROPERTY CMS::DefaultCompilerOptions
+    $<$<CONFIG:MinSizeRel>:/Os>
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/Oi /Ot>
+    $<$<OR:$<CONFIG:MinSizeRel>,$<CONFIG:Release>>:/Oy>
+    $<$<NOT:$<CONFIG:Debug>>:/GL /GS->
+    /W4 /EHa /fp:fast)

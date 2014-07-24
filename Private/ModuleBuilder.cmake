@@ -19,7 +19,7 @@
 #    3. This notice may not be removed or altered from any source
 #    distribution.
 
-function (CMS_ADD_DEFINITIONS)
+function (CMS_ADD_DEFINITIONS_OLD)
   if (ARGN)
     list (APPEND CMS_DEFINITIONS "${ARGN}")
     CMS_PROMOTE_TO_PARENT_SCOPE(CMS_DEFINITIONS)
@@ -28,7 +28,7 @@ function (CMS_ADD_DEFINITIONS)
   endif ()
 endfunction ()
 
-function (CMS_DISABLE_MSVC_WARNINGS)
+function (CMS_DISABLE_MSVC_WARNINGS_OLD)
   if (ARGN)
     list (APPEND CMS_DISABLED_MSVC_WARNINGS "${ARGN}")
     CMS_PROMOTE_TO_PARENT_SCOPE(CMS_DISABLED_MSVC_WARNINGS)
@@ -94,116 +94,9 @@ macro (CMS_LIBRARY_HEADERS)
   endif ()
 endmacro ()
 
-macro (CMS_ADD_LIBRARY_HEADERS)
-  message ("CMS_ADD_LIBRARY_HEADERS is obsolete."
-           " Use CMS_LIBRARY_HEADERS instead.")
-  CMS_LIBRARY_HEADERS(${ARGN})
-endmacro ()
-
-function (CMS_INSTALL_LIBRARY_PACKAGE)
-  CMS_CHECK_PREFIX()
-  message ("CMS_INSTALL_LIBRARY_PACKAGE is deprecated.")
-
-  if (ARGN)
-    list (GET ARGN 0 _name)
-  else ()
-    set (_name "${PROJECT_NAME}")
-  endif ()
-
-  if (NOT CMS_CURRENT_VERSION)
-    message (WARNING "Version is not set.")
-  endif ()
-
-  if (NOT CMS_PACKAGE_DESCRIPTION)
-    message (WARNING "Package description is not set.")
-  endif ()
-
-  CMS_ASSIGN_PACKAGE(${CMS_CURRENT_PREFIX} "${_name}")
-  set (_var CMS_DOTPC_${_name})
-  set (_filename "${_name}.pc.in")
-
-  find_file (${_var} ${_filename} PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
-             NO_DEFAULT_PATH)
-  mark_as_advanced (${_var})
-
-  if (${_var})
-    set (_input "${${_var}}")
-  else ()
-    message (STATUS "${_filename} not found. Using default.")
-    set (_input "${CMS_PRIVATE_DIR}/DefaultLibraryPackage.pc.in")
-  endif ()
-
-  unset (CMS_REQUIRED_PACKAGES)
-
-  foreach (_prefix IN LISTS CMS_IMPORTED_PREFIXES)
-    set (_package ${${_prefix}_PACKAGE})
-
-    if (_package)
-      if (CMS_REQUIRED_PACKAGES)
-        set (CMS_REQUIRED_PACKAGES "${CMS_REQUIRED_PACKAGES}, ${_package}")
-      else ()
-        set (CMS_REQUIRED_PACKAGES "${_package}")
-      endif ()
-    endif ()
-  endforeach ()
-
-  set (_dotpc "${PROJECT_BINARY_DIR}/${_name}.pc")
-  set (CMS_CURRENT_PACKAGE "${_name}")
-  configure_file (${_input} "${_dotpc}" @ONLY)
-  install (FILES "${_dotpc}" DESTINATION "${CMS_DOTPC_DIR}")
-
-  CMS_ASSIGN_PACKAGE(${CMS_CURRENT_PREFIX} "${_name}")
-  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_CURRENT_PACKAGE)
-endfunction ()
-
-function (CMS_INSTALL_MODULE _name)
-  CMS_CHECK_PREFIX()
-  message ("CMS_INSTALL_MODULE is deprecated. Use CMS_INSTALL_PACKAGE intead.")
-
-  if (NOT CMS_CURRENT_VERSION)
-    message (FATAL_ERROR "Set the project version.")
-  endif ()
-
-  if (NOT CMS_CURRENT_PACKAGE)
-    message (FATAL_ERROR "Install the current package first.")
-  endif ()
-
-  set (CMS_CURRENT_MODULE "${_name}")
-
-  set (_var CMS_MODULE_${_name})
-  set (_filename "Find${_name}.cmake")
-
-  find_file (${_var} ${_filename}.in ${_filename}
-             PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
-                   "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-             NO_DEFAULT_PATH)
-  mark_as_advanced (${_var})
-
-  if (${_var})
-    set (_input "${${_var}}")
-    get_filename_component (_ext "${_input}" EXT)
-
-    if (_ext STREQUAL ".cmake.in")
-      set (_configure true)
-    else ()
-      set (_module "${_input}")
-    endif ()
-  else ()
-    message (STATUS "${_filename}(.in)? not found. Using default.")
-    set (_input "${CMS_PRIVATE_DIR}/DefaultModule.cmake.in")
-    set (_configure true)
-  endif ()
-
-  if (_configure)
-    set (_module "${PROJECT_BINARY_DIR}/${_filename}")
-    configure_file (${_input} "${_module}" @ONLY)
-  endif ()
-
-  install (FILES "${_module}" DESTINATION "${CMS_MODULE_DIR}")
-  set (CMS_CURRENT_MODULE "${CMS_CURRENT_MODULE}" PARENT_SCOPE)
-endfunction ()
-
 function (CMS_INSTALL_PACKAGE _name)
+  message (DEPRECATION "CMS_INSTALL_PACKAGE is deprecated.")
+
   CMS_CHECK_PREFIX()
 
   if (NOT CMS_CURRENT_VERSION)
@@ -266,6 +159,8 @@ macro (CMS_APPLY_DEPENDENCIES)
 endmacro ()
 
 macro (CMS_BEGIN_TARGET _name)
+  message (DEPRECATION "CMS_BEGIN_TARGET is deprecated.")
+
   set (CMS_CURRENT_TARGET_NAME "${_name}")
   unset (CMS_SOURCE_FILES)
   unset (CMS_GENERATED_FILES)
@@ -287,7 +182,7 @@ macro (CMS_SOURCE_FILES_COMPILE_FLAGS)
   CMS_SFPM_ADD_VALUES(CMS_SOURCE_FLAGS FLAGS "flags" ${ARGN})
 endmacro ()
 
-function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS)
+function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS_OLD)
   CMS_CHECK_TARGET()
 
   if (ARGN)
@@ -350,14 +245,6 @@ macro (CMS_BEGIN_EXECUTABLE)
   endif ()
 
   CMS_BEGIN_TARGET("${CMS_CURRENT_EXECUTABLE_NAME}")
-endmacro ()
-
-macro (CMS_ENABLE_TESTING)
-  set (ENABLE_TESTING true CACHE BOOL "Set true to enable testing")
-
-  if (ENABLE_TESTING)
-    enable_testing ()
-  endif ()
 endmacro ()
 
 macro (CMS_BEGIN_TEST _name)
@@ -434,7 +321,7 @@ macro (CMS_CHECK_LIBRARY)
   endif ()
 endmacro ()
 
-function (CMS_ADD_SOURCE_FILES)
+function (CMS_ADD_SOURCE_FILES_OLD)
   if (ARGN)
     foreach (_file IN LISTS ARGN)
       get_filename_component (_fullpath "${_file}" ABSOLUTE)
@@ -450,7 +337,7 @@ function (CMS_ADD_SOURCE_FILES)
   endif ()
 endfunction ()
 
-function (CMS_ADD_GENERATED_FILES)
+function (CMS_ADD_GENERATED_FILES_OLD)
   if (ARGN)
     foreach (_file IN LISTS ARGN)
       get_filename_component (_fullpath "${_file}" ABSOLUTE)

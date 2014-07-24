@@ -18,16 +18,23 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-set (PACKAGE_VERSION 0.0.4)
+if (CMS_SCOPE_CALL STREQUAL "INIT")
+  set (ENABLE_TESTING true CACHE BOOL "Set true to enable testing")
 
-if (PACKAGE_FIND_VERSION)
-  if (PACKAGE_VERSION VERSION_LESS PACKAGE_FIND_VERSION)
-    set (PACKAGE_VERSION_COMPATIBLE false)
-  else ()
-    set (PACKAGE_VERSION_COMPATIBLE true)
-
-    if (PACKAGE_VERSION VERSION_EQUAL PACKAGE_FIND_VERSION)
-      set (PACKAGE_VERSION_EXACT true)
+  function (CMS_ENABLE_TESTING)
+    if (ENABLE_TESTING)
+      enable_testing ()
     endif ()
-  endif ()
+  endfunction ()
+elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
+  list (GET ARGN 0 _name)
+
+  CMS_DEFINE_TARGET("${_name}")
+
+  CMS_STACK_PUSH("${_name}")
+elseif (CMS_SCOPE_CALL STREQUAL "END")
+  CMS_STACK_POP(_name)
+
+  CMS_SUBMIT_EXECUTABLE("${_name}")
+  add_test (NAME "${_name}" COMMAND "${_name}")
 endif ()

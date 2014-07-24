@@ -16,8 +16,13 @@
 #    2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 
-#    3. This notice may not be removed or altered from any source
-#    distribution.
+#    3. This notice may not be removed or altered from any source distribution.
+
+cmake_minimum_required (VERSION 3.0.0)
+
+macro (CMS_RETURN _var)
+  set ("${${_var}}" "${ARGN}" PARENT_SCOPE)
+endmacro ()
 
 macro (CMS_PROMOTE_TO_PARENT_SCOPE _var)
   set (${_var} "${${_var}}" PARENT_SCOPE)
@@ -26,6 +31,18 @@ endmacro ()
 macro (CMS_PROMOTE_TO_GLOBAL _var)
   set (${_var} "${${_var}}" CACHE INTERNAL "" FORCE)
 endmacro ()
+
+function (CMS_DEFINE_CMAKE_PROPERTY)
+  define_property (${ARGN} BRIEF_DOCS "Used by CMS" FULL_DOCS "Used by CMS")
+endfunction ()
+
+function (CMS_ENSURE_PROPERTY)
+  get_property (_defined ${ARGN} DEFINED)
+
+  if (NOT _defined)
+    CMS_DEFINE_CMAKE_PROPERTY(${ARGN})
+  endif ()
+endfunction ()
 
 function (CMS_NEW_OBJECT _ret)
   math (EXPR _next "${CMS_NEXT_OBJECT} + 1")
@@ -52,11 +69,13 @@ function (CMS_SET_ADD _set _value)
 
   if (NOT _exists)
     list (APPEND ${_set} "${_value}")
+    CMS_PROMOTE_TO_PARENT_SCOPE(${_set})
   endif ()
 endfunction ()
 
 function (CMS_SET_REMOVE _set _value)
   list (REMOVE_ITEM ${_set} "${_value}")
+  CMS_PROMOTE_TO_PARENT_SCOPE(${_set})
 endfunction ()
 
 ##
@@ -175,45 +194,97 @@ function (CMS_WARN_UNSET_ENV _name)
   endif ()
 endfunction ()
 
-function (CMS_REINIT_CACHE _name _value _type _desc)
-  if (NOT CMS_REINIT_${_name})
-    set (${_name} "${_value}" CACHE ${_type} "${_desc}" FORCE)
-    set (CMS_REINIT_${_name} true CACHE INTERNAL "")
+function (CMS_MODIFY_CACHE _name)
+  get_property (_defined CACHE "${_name}" PROPERTY HELPSTRING SET)
+
+  if (_defined)
+    set_property (CACHE "${_name}" PROPERTY VALUE "${ARGN}")
+  else ()
+    message (FATAL_ERROR "Cache variable ${_name} is not defined.")
   endif ()
+endfunction ()
+
+function (CMS_REINIT_CACHE _name)
+  get_property (_defined CACHE "${_name}" PROPERTY HELPSTRING SET)
+
+  if (_defined)
+    list (FIND CMS_MODIFIED "${_name}" _index)
+
+    if (NOT _index EQUAL -1)
+      return ()
+    endif ()
+
+    CMS_MODIFY_CACHE("${_name}" "${ARGN}")
+  else ()
+    set ("${_name}" "${ARGN}" CACHE STRING "")
+  endif ()
+
+  set_property (CACHE CMS_MODIFIED APPEND PROPERTY VALUE "${_name}")
 endfunction ()
 
 # Here starts the global initialization.
 
-find_package (PkgConfig REQUIRED)
+function (CMS_INIT_GLOBAL)
+  get_property (_initialized DIRECTORY PROPERTY CMS::Initialized DEFINED)
+
+  if (NOT _initialized)
+    set (CMS_MODIFIED ""
+         CACHE STRING "Cache variables that have been modified by CMS.")
+    mark_as_advanced (CMS_MODIFIED)
+
+    include ("${CMS_PRIVATE_DIR}/Compiler.cmake")
+    include ("${CMS_PRIVATE_DIR}/Executable.cmake")
+    include ("${CMS_PRIVATE_DIR}/Library.cmake")
+    include ("${CMS_PRIVATE_DIR}/Package.cmake")
+    include ("${CMS_PRIVATE_DIR}/PackageTools.cmake")
+    include ("${CMS_PRIVATE_DIR}/PrecompiledHeaderCxx.cmake")
+    include ("${CMS_PRIVATE_DIR}/Scope.cmake")
+    include ("${CMS_PRIVATE_DIR}/SetToolsetSuffixCxx.cmake")
+    include ("${CMS_PRIVATE_DIR}/SourceFilePropertyMap.cmake")
+    include ("${CMS_PRIVATE_DIR}/SourceGroupMap.cmake")
+    include ("${CMS_PRIVATE_DIR}/Target.cmake")
+
+    CMS_WARN_UNSET_ENV("PKG_CONFIG_PATH")
+
+    if (CMS_INSTALL_PREFIX)
+      CMS_REINIT_CACHE(CMAKE_INSTALL_PREFIX
+                       "${CMS_INSTALL_PREFIX}/${CMAKE_PROJECT_NAME}")
+    endif ()
+
+    CMS_DEFINE_CMAKE_PROPERTY(DIRECTORY PROPERTY CMS::Initialized INHERITED)
+  endif ()
+endfunction ()
+
+function (CMS_INIT_DIRECTORY)
+  get_property (_initialized DIRECTORY PROPERTY CMS::Initialized SET)
+
+  if (NOT _initialized)
+    list (APPEND CMAKE_MODULE_PATH
+          "${CMS_BASE_DIR}/Modules"
+          "${CMS_MODULE_DIR}")
+    CMS_PROMOTE_TO_PARENT_SCOPE(CMAKE_MODULE_PATH)
+
+    add_library (CMSVariables INTERFACE IMPORTED)
+    set_directory_properties (PROPERTIES CMS::Initialized true)
+  endif ()
+endfunction ()
 
 set (CMS_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set (CMS_PRIVATE_DIR "${CMS_BASE_DIR}/Private")
 set (CMS_INSTALL_DIR "${CMS_BASE_DIR}/Installed")
 set (CMS_MODULE_DIR "${CMS_INSTALL_DIR}/Modules")
-set (CMS_DOTPC_DIR "${CMS_INSTALL_DIR}/DotPCFiles")
 set (CMS_INSTALL_PREFIX "$ENV{CMS_INSTALL_PREFIX}")
-
-include ("${CMS_BASE_DIR}/CMakeSupportsConfigVersion.cmake")
-include (FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(CMakeSupports
-                                  REQUIRED_VARS CMS_BASE_DIR
-                                  VERSION_VAR CMS_VERSION)
-
-list (APPEND CMAKE_MODULE_PATH "${CMS_BASE_DIR}/Modules")
-list (APPEND CMAKE_MODULE_PATH "${CMS_MODULE_DIR}")
 
 if (NOT CMS_MEMORY_INITIALIZED)
   set (CMS_NEXT_OBJECT 0 CACHE INTERNAL "" FORCE)
   set (CMS_MEMORY_INITIALIZED true)
 endif ()
 
-CMS_WARN_UNSET_ENV("PKG_CONFIG_PATH")
+set (CMAKE_WARN_DEPRECATED true)
+find_package (PkgConfig REQUIRED)
 
-if (CMS_INSTALL_PREFIX)
-  CMS_REINIT_CACHE(CMAKE_INSTALL_PREFIX
-                   "${CMS_INSTALL_PREFIX}/${CMAKE_PROJECT_NAME}" PATH
-                   "Install path prefix, prepended onto install directories.")
-endif ()
+CMS_INIT_GLOBAL()
+CMS_INIT_DIRECTORY()
 
 # Here starts the project initialization.
 
@@ -221,8 +292,3 @@ unset (CMS_ADDITIONAL_FILES)
 
 include ("${CMS_PRIVATE_DIR}/ModuleBuilder.cmake")
 include ("${CMS_PRIVATE_DIR}/ModuleFinder.cmake")
-include ("${CMS_PRIVATE_DIR}/PackageTools.cmake")
-include ("${CMS_PRIVATE_DIR}/PrecompiledHeaderCxx.cmake")
-include ("${CMS_PRIVATE_DIR}/SetToolsetSuffixCxx.cmake")
-include ("${CMS_PRIVATE_DIR}/SourceFilePropertyMap.cmake")
-include ("${CMS_PRIVATE_DIR}/SourceGroupMap.cmake")

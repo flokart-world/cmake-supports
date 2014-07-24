@@ -18,16 +18,15 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-set (PACKAGE_VERSION 0.0.4)
+function (CMS_DEFINE_LIBRARY _name)
+  CMS_DEFINE_TARGET(${_name})
+  CMS_INHERIT_PROPERTY(ExportName)
+endfunction ()
 
-if (PACKAGE_FIND_VERSION)
-  if (PACKAGE_VERSION VERSION_LESS PACKAGE_FIND_VERSION)
-    set (PACKAGE_VERSION_COMPATIBLE false)
-  else ()
-    set (PACKAGE_VERSION_COMPATIBLE true)
+function (CMS_SUBMIT_LIBRARY _name)
+  message (STATUS "Emitting the library ${_name}.")
 
-    if (PACKAGE_VERSION VERSION_EQUAL PACKAGE_FIND_VERSION)
-      set (PACKAGE_VERSION_EXACT true)
-    endif ()
-  endif ()
-endif ()
+  CMS_PREPARE_TARGET(_files)
+  add_library (${_name} ${_files})
+  CMS_SUBMIT_TARGET(${_name})
+endfunction ()

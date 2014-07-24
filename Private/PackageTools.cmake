@@ -19,6 +19,8 @@
 #    3. This notice may not be removed or altered from any source
 #    distribution.
 
+include (FindPackageHandleStandardArgs)
+
 macro (CMS_REPLACE_MODULE_DIRS _prefix _old_include _old_lib)
   list (REMOVE_ITEM ${_prefix}_INCLUDE_DIRS "${_old_include}")
   list (REMOVE_ITEM ${_prefix}_LIBRARY_DIRS "${_old_lib}")
@@ -108,7 +110,11 @@ function (CMS_SET_PACKAGE_DEPENDENCY)
     list (GET ARGN 0 _prefix)
     list (GET ARGN 1 _package)
     list (REMOVE_AT ARGN 0 1)
-    CMS_IMPORT_MODULE(${_prefix} NAME ${_package})
+
+    if (_package)
+      CMS_IMPORT_MODULE(${_prefix} NAME ${_package})
+    endif ()
+
     CMS_SET_ADD(${CMS_PACKAGE_DEPENDENCY} ${_prefix})
   endwhile ()
 
@@ -123,6 +129,16 @@ function (CMS_SET_PACKAGE_COMPONENTS)
     list (GET ARGN 1 _library)
     list (REMOVE_AT ARGN 0 1)
     CMS_MAP_PUT(CMS_IMPORTED_COMPONENTS "${_component}" "${_library}")
+
+    set (_debugExpr [[\$<\$<CONFIG:Debug>:(.*)>]])
+    string (REGEX REPLACE ${_debugExpr} "" _location "${_library}")
+    string (REGEX REPLACE ${_debugExpr} \\1 _locationDebug "${_library}")
+
+    add_library ("${_component}" STATIC IMPORTED)
+    set_target_properties ("${_component}"
+                           PROPERTIES
+                           IMPORTED_LOCATION "${_location}"
+                           IMPORTED_LOCATION_DEBUG "${_locationDebug}")
   endwhile ()
 
   CMS_MAP_PROMOTE_TO_PARENT_SCOPE(CMS_IMPORTED_COMPONENTS)
@@ -148,8 +164,10 @@ function (CMS_END_PACKAGE)
   if (${CMS_PACKAGE_DEPENDENCY})
     foreach (_prefix IN LISTS ${CMS_PACKAGE_DEPENDENCY})
       list (APPEND ${CMS_PACKAGE_PREFIX}_INCLUDE_DIRS
+                   "${${_prefix}_INCLUDE_DIR}"
                    "${${_prefix}_INCLUDE_DIRS}")
       list (APPEND ${CMS_PACKAGE_PREFIX}_LIBRARY_DIRS
+                   "${${_prefix}_LIBRARY_DIR}"
                    "${${_prefix}_LIBRARY_DIRS}")
     endforeach ()
   endif ()
@@ -173,4 +191,33 @@ function (CMS_END_PACKAGE)
 
   list (REMOVE_AT CMS_PACKAGE_STACK 0 1 2)
   CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_STACK)
+endfunction ()
+
+function (CMS_LOAD_CONFIG_AS_MODULE _name _path)
+  set (_options "${${_name}_FIND_VERSION}")
+
+  if (${_name}_FIND_EXACT)
+    list (APPEND _options EXACT)
+  endif ()
+
+  if (${_name}_FIND_QUIETLY)
+    list (APPEND _options QUIET)
+  endif ()
+
+  if (${_name}_FIND_REQUIRED)
+    list (APPEND _options REQUIRED)
+  endif ()
+
+  if (${_name}_FIND_COMPONENTS)
+    list (APPEND _options COMPONENTS)
+
+    foreach (_component IN LISTS ${_name}_FIND_COMPONENTS)
+      if (${_name}_FIND_REQUIRED_${_component})
+        list (APPEND _options "${_component}")
+      endif ()
+    endforeach ()
+  endif ()
+
+  find_package ("${_name}" ${_options} CONFIG PATHS "${_path}" NO_DEFAULT_PATH)
+  FIND_PACKAGE_HANDLE_STANDARD_ARGS("${_name}" CONFIG_MODE)
 endfunction ()
