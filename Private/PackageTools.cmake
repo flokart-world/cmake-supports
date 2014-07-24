@@ -220,4 +220,6 @@ function (CMS_LOAD_CONFIG_AS_MODULE _name _path)
 
   find_package ("${_name}" ${_options} CONFIG PATHS "${_path}" NO_DEFAULT_PATH)
   FIND_PACKAGE_HANDLE_STANDARD_ARGS("${_name}" CONFIG_MODE)
+
+  CMS_PROMOTE_TO_PARENT_SCOPE(${_name}_FOUND)
 endfunction ()
