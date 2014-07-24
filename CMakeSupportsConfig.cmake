@@ -36,7 +36,7 @@ function (CMS_DEFINE_CMAKE_PROPERTY)
   define_property (${ARGN} BRIEF_DOCS "Used by CMS" FULL_DOCS "Used by CMS")
 endfunction ()
 
-function (CMS_ENSURE_PROPERTY)
+function (CMS_ENSURE_CMAKE_PROPERTY)
   get_property (_defined ${ARGN} DEFINED)
 
   if (NOT _defined)

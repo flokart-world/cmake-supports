@@ -118,7 +118,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
     message (STATUS "Entering the module ${_name}.")
 
     CMS_DEFINE_NAMESPACE("${_name}")
-    CMS_DEFINE_SCOPE_PROPERTY(Compatibility)
+    CMS_DEFINE_PROPERTY(Compatibility)
 
     CMS_SET_PROPERTY(Compatibility AnyNewerVersion)
     CMS_SET_PROPERTY(ExportName ${_name})

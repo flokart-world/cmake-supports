@@ -34,7 +34,7 @@ function (CMS_REGISTER_PACKAGE _name)
   endif ()
 
   CMS_QUALIFY_PACKAGE_PREFIX(_qname ${_name})
-  CMS_ENSURE_PROPERTY(GLOBAL PROPERTY ${_qname})
+  CMS_ENSURE_CMAKE_PROPERTY(GLOBAL PROPERTY ${_qname})
   set_property (GLOBAL PROPERTY "${_qname}" "${_prefix}")
 endfunction ()
 

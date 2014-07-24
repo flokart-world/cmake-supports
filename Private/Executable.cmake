@@ -20,13 +20,13 @@
 
 function (CMS_DEFINE_EXECUTABLE _name)
   CMS_DEFINE_TARGET(${_name})
-  CMS_DEFINE_SCOPE_PROPERTY(GUI)
+  CMS_DEFINE_PROPERTY(GUI)
 
   if (MSVC)
-    CMS_DEFINE_SCOPE_PROPERTY(EntryPoint)
+    CMS_DEFINE_PROPERTY(EntryPoint)
 
     if (WIN32)
-      CMS_DEFINE_SCOPE_PROPERTY(WinMain)
+      CMS_DEFINE_PROPERTY(WinMain)
     endif ()
   endif ()
 endfunction ()
