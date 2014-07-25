@@ -18,6 +18,8 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
+CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY CMS::Package::Domain)
+
 function (CMS_QUALIFY_PACKAGE_PREFIX _ret _name)
   CMS_RETURN(_ret CMS::Package::Prefix[\${_name}])
 endfunction ()
@@ -46,7 +48,11 @@ function (CMS_GET_PACKAGE_PREFIX _ret _name)
 endfunction ()
 
 function (CMS_PACKAGE_INTERFACE _ret _package)
-  CMS_RETURN(_ret "CMSPackageInterfaces::\${_package}")
+  CMS_RETURN(_ret CMSPackageInterfaces::\${_package})
+endfunction ()
+
+function (CMS_PACKAGE_DOMAIN _ret _package)
+  CMS_RETURN(_ret CMS::Package::Domain[\${_package}])
 endfunction ()
 
 function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
@@ -67,12 +73,20 @@ function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
     set_target_properties (${_target} PROPERTIES
         INTERFACE_LINK_LIBRARIES "${${_prefix}_LIBRARIES}")
   endif ()
+
+  CMS_PACKAGE_DOMAIN(_qname "${_target}")
+  CMS_ENSURE_CMAKE_PROPERTY(GLOBAL PROPERTY "${_qname}")
+  set_property (GLOBAL PROPERTY "${_qname}" FOREIGN)
 endfunction ()
 
 function (CMS_SUBMIT_PACKAGE _package)
   CMS_REGISTER_PACKAGE(${_package})
   CMS_PACKAGE_INTERFACE(_target ${_package})
   add_library (${_target} INTERFACE IMPORTED GLOBAL)
+
+  CMS_PACKAGE_DOMAIN(_qname "${_target}")
+  CMS_DEFINE_CMAKE_PROPERTY(GLOBAL PROPERTY "${_qname}")
+  set_property (GLOBAL PROPERTY "${_qname}" LOCAL)
 endfunction ()
 
 function (CMS_TEST_PACKAGE _ret _name)
@@ -82,6 +96,19 @@ function (CMS_TEST_PACKAGE _ret _name)
     CMS_RETURN(_ret true)
   else ()
     CMS_RETURN(_ret false)
+  endif ()
+endfunction ()
+
+function (CMS_GET_PACKAGE_DOMAIN _ret _name)
+  CMS_PACKAGE_INTERFACE(_target "${_name}")
+
+  if (TARGET "${_target}")
+    CMS_PACKAGE_DOMAIN(_qname "${_target}")
+    get_property (_domain GLOBAL PROPERTY "${_qname}")
+
+    CMS_RETURN(_ret \${_domain})
+  else ()
+    CMS_RETURN(_ret \${_name}-NOTFOUND)
   endif ()
 endfunction ()
 
@@ -106,15 +133,6 @@ function (CMS_LOAD_PACKAGE _name)
       CMS_REGISTER_PACKAGE(${_name} ${_prefix})
       CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix})
     endif ()
-  endif ()
-endfunction ()
-
-function (CMS_ENSURE_PACKAGES)
-  if (ARGN)
-    foreach (_package IN LISTS ARGN)
-      CMS_GET_PACKAGE_PREFIX(_prefix ${_package})
-      CMS_LOAD_PACKAGE(${_package} PREFIX ${_prefix})
-    endforeach ()
   endif ()
 endfunction ()
 

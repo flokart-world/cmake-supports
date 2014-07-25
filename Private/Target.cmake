@@ -186,6 +186,24 @@ function (CMS_ADD_GENERATED_FILES)
   endif ()
 endfunction ()
 
+function (CMS_ENSURE_PACKAGES)
+  while (ARGN)
+    list (GET ARGN 0 _package)
+    list (REMOVE_AT ARGN 0)
+
+    CMS_GET_PACKAGE_DOMAIN(_domain "${_package}")
+
+    if (_domain STREQUAL LOCAL)
+      CMS_QUALIFY_NAMESPACE(_qname "${_package}")
+      CMS_GET_QNAME_PROPERTY(_deps "${_qname}::RequiredPackages")
+      list (APPEND ARGN ${_deps})
+    else ()
+      CMS_GET_PACKAGE_PREFIX(_prefix "${_package}")
+      CMS_LOAD_PACKAGE("${_package}" PREFIX "${_prefix}")
+    endif ()
+  endwhile ()
+endfunction ()
+
 function (CMS_PREPARE_TARGET _sources)
   CMS_GET_PROPERTY(_linkDirectories LinkDirectories)
   CMS_GET_PROPERTY(_publicHeaders PublicHeaders)
@@ -197,7 +215,9 @@ function (CMS_PREPARE_TARGET _sources)
   endif ()
 
   CMS_ENSURE_PACKAGES(${_requiredPackages})
-  CMS_RETURN(_sources \${_sourceFiles} \${_publicHeaders})
+  list (APPEND _sourceFiles ${_publicHeaders})
+
+  CMS_RETURN(_sources \${_sourceFiles})
 endfunction ()
 
 function (CMS_SUBMIT_TARGET _name)
@@ -218,7 +238,7 @@ function (CMS_SUBMIT_TARGET _name)
 
   list (REMOVE_DUPLICATES _publicHeaderDirectories)
 
-  set_target_properties (${_name}
+  set_target_properties ("${_name}"
       PROPERTIES
       LINKER_LANGUAGE "${_linkerLanguage}"
       LINK_FLAGS "${_linkFlags}"
