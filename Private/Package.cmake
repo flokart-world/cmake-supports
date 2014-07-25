@@ -69,6 +69,12 @@ function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
   endif ()
 endfunction ()
 
+function (CMS_SUBMIT_PACKAGE _package)
+  CMS_REGISTER_PACKAGE(${_package})
+  CMS_PACKAGE_INTERFACE(_target ${_package})
+  add_library (${_target} INTERFACE IMPORTED GLOBAL)
+endfunction ()
+
 function (CMS_TEST_PACKAGE _ret _name)
   CMS_PACKAGE_INTERFACE(_target ${_name})
 

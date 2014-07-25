@@ -84,7 +84,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
           "CMS_LOAD_CONFIG_AS_MODULE(${_name} \"${CMAKE_INSTALL_PREFIX}\")\n")
     install (FILES ${_module} DESTINATION ${CMS_MODULE_DIR})
 
-    CMS_REGISTER_PACKAGE(${_name})
+    CMS_SUBMIT_PACKAGE(${_name})
     export (PACKAGE ${_name})
   endfunction ()
 elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
