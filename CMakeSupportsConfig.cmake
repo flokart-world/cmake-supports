@@ -269,7 +269,8 @@ function (CMS_INIT_DIRECTORY)
   if (NOT _initialized)
     list (APPEND CMAKE_MODULE_PATH
           "${CMS_BASE_DIR}/Modules"
-          "${CMS_MODULE_DIR}")
+          "${CMS_MODULE_DIR}"
+          $ENV{CMS_MODULE_PATH})
     CMS_PROMOTE_TO_PARENT_SCOPE(CMAKE_MODULE_PATH)
 
     add_library (CMSVariables INTERFACE IMPORTED)
