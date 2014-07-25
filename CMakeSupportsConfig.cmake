@@ -32,6 +32,14 @@ macro (CMS_PROMOTE_TO_GLOBAL _var)
   set (${_var} "${${_var}}" CACHE INTERNAL "" FORCE)
 endmacro ()
 
+function (CMS_ASSERT_IDENTIFIER)
+  list (LENGTH ARGN _size)
+
+  if (NOT _size EQUAL 1)
+    message (FATAL_ERROR "${ARGN} was given as an identifier.")
+  endif ()
+endfunction ()
+
 function (CMS_DEFINE_CMAKE_PROPERTY)
   define_property (${ARGN} BRIEF_DOCS "Used by CMS" FULL_DOCS "Used by CMS")
 endfunction ()
