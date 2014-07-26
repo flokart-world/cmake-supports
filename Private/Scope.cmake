@@ -348,6 +348,7 @@ function (CMS_QUALIFY_NAMESPACE _qname _name)
 endfunction ()
 
 function (CMS_DEFINE_NAMESPACE _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
   get_directory_property (_parent CMS::Scope::This)
 
   if (_parent)

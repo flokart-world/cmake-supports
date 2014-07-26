@@ -28,6 +28,7 @@ function (CMS_DEFINE_TARGET _name)
   endif ()
 
   CMS_DEFINE_NAMESPACE(${_name})
+  CMS_DEFINE_PROPERTY(Dependencies)
   CMS_DEFINE_PROPERTY(GeneratedFiles)
   CMS_DEFINE_PROPERTY(LinkFlags)
   CMS_DEFINE_PROPERTY(LinkerLanguage)
@@ -220,9 +221,27 @@ function (CMS_PREPARE_TARGET _sources)
   CMS_RETURN(_sources \${_sourceFiles})
 endfunction ()
 
+function (CMS_SUBMIT_DEPENDENCIES _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
+
+  CMS_GET_PROPERTY(_dependencies Dependencies)
+
+  if (_dependencies)
+    add_dependencies (${_name} ${_dependencies})
+  endif ()
+
+  CMS_PROPAGATE_PROPERTY(ProvidedPackages)
+  CMS_PROPAGATE_PROPERTY(ProvidedTargets)
+  CMS_PROPAGATE_PROPERTY(RequiredPackages)
+  CMS_PROPAGATE_PROPERTY(RequiredVariables)
+endfunction ()
+
 function (CMS_SUBMIT_TARGET _name)
+  CMS_SUBMIT_DEPENDENCIES(${_name})
+
   CMS_GET_PROPERTY(_compileOptions CompileOptions)
   CMS_GET_PROPERTY(_compileDefinitions CompileDefinitions)
+  CMS_GET_PROPERTY(_dependencies Dependencies)
   CMS_GET_PROPERTY(_exportName ExportName)
   CMS_GET_PROPERTY(_generatedFiles GeneratedFiles)
   CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
@@ -238,7 +257,7 @@ function (CMS_SUBMIT_TARGET _name)
 
   list (REMOVE_DUPLICATES _publicHeaderDirectories)
 
-  set_target_properties ("${_name}"
+  set_target_properties (${_name}
       PROPERTIES
       LINKER_LANGUAGE "${_linkerLanguage}"
       LINK_FLAGS "${_linkFlags}"
@@ -298,11 +317,6 @@ function (CMS_SUBMIT_TARGET _name)
       source_group ("${_sourceGroup}" FILES "${_files}")
     endforeach ()
   endif ()
-
-  CMS_PROPAGATE_PROPERTY(ProvidedPackages)
-  CMS_PROPAGATE_PROPERTY(ProvidedTargets)
-  CMS_PROPAGATE_PROPERTY(RequiredPackages)
-  CMS_PROPAGATE_PROPERTY(RequiredVariables)
 
   if (_exportName)
     install (TARGETS "${_name}"

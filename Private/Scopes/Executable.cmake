@@ -31,5 +31,4 @@ elseif (CMS_SCOPE_CALL STREQUAL "END")
   CMS_STACK_POP(_name)
 
   CMS_SUBMIT_EXECUTABLE(${_name})
-  CMS_APPEND_TO_PARENT_PROPERTY(ProvidedTargets ${_name})
 endif ()
