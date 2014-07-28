@@ -273,7 +273,7 @@ function (CMS_INIT_DIRECTORY)
           $ENV{CMS_MODULE_PATH})
     CMS_PROMOTE_TO_PARENT_SCOPE(CMAKE_MODULE_PATH)
 
-    add_library (CMSVariables INTERFACE IMPORTED)
+    add_library (CMSVariables UNKNOWN IMPORTED)
     set_directory_properties (PROPERTIES CMS::Initialized true)
   endif ()
 endfunction ()

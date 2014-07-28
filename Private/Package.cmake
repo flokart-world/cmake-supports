@@ -21,10 +21,12 @@
 CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY CMS::Package::Domain)
 
 function (CMS_QUALIFY_PACKAGE_PREFIX _ret _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
   CMS_RETURN(_ret CMS::Package::Prefix[\${_name}])
 endfunction ()
 
 function (CMS_QUALIFY_VARIABLE _ret _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
   CMS_RETURN(_ret CMS::Package::Variable[\${_name}])
 endfunction ()
 
@@ -136,14 +138,42 @@ function (CMS_LOAD_PACKAGE _name)
   endif ()
 endfunction ()
 
-function (CMS_LOAD_VARIABLE _name)
+function (CMS_TEST_VARIABLE _ret _name)
   CMS_QUALIFY_VARIABLE(_qname ${_name})
   get_property (_defined TARGET CMSVariables PROPERTY ${_qname} DEFINED)
 
+  CMS_RETURN(_ret \${_defined})
+endfunction ()
+
+function (CMS_TRANSFER_VARIABLE _name)
+  CMS_QUALIFY_VARIABLE(_qname ${_name})
+  CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY ${_qname})
+  set_target_properties (CMSVariables PROPERTIES ${_qname} "${${_name}}")
+endfunction ()
+
+function (CMS_LOAD_VARIABLE _name)
+  CMS_TEST_VARIABLE(_defined ${_name})
+
   if (NOT _defined)
-    CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY ${_qname})
-    set_target_properties (CMSVariables PROPERTIES ${_qname} "${${_name}}")
+    CMS_TRANSFER_VARIABLE(${_name})
   endif ()
+endfunction ()
+
+function (CMS_REGISTER_VARIABLE _name)
+  CMS_TEST_VARIABLE(_defined ${_name})
+
+  if (_defined)
+    message (FATAL_ERROR "Variable ${_name} has already been registered.")
+  else ()
+    CMS_TRANSFER_VARIABLE(${_name})
+  endif ()
+endfunction ()
+
+function (CMS_GET_VARIABLE _ret _name)
+  CMS_QUALIFY_VARIABLE(_qname ${_name})
+  get_target_property (_value CMSVariables ${_qname})
+
+  CMS_RETURN(_ret \${_value})
 endfunction ()
 
 function (CMS_GET_VARIABLE_EXPR _ret _name)
