@@ -157,6 +157,7 @@ function (CMS_DEFINE_COMMON_PROPERTIES)
   CMS_DEFINE_PROPERTY(LinkDirectories)
   CMS_DEFINE_PROPERTY(LinkLibraries)
   CMS_DEFINE_PROPERTY(Parent)
+  CMS_DEFINE_PROPERTY(Prefix)
   CMS_DEFINE_PROPERTY(ProvidedPackages)
   CMS_DEFINE_PROPERTY(ProvidedTargets)
   CMS_DEFINE_PROPERTY(PublicHeaders)
@@ -366,6 +367,7 @@ function (CMS_DEFINE_NAMESPACE _name)
     set_directory_properties (PROPERTIES CMS::Scope::This "${_qname}")
     CMS_DEFINE_COMMON_PROPERTIES()
     CMS_SET_PROPERTY(Parent "${_parent}")
+    CMS_SET_PROPERTY(Prefix ${_name})
     CMS_SET_PROPERTY(Type "${CMS_SCOPE_TYPE}")
   endif ()
 endfunction ()
@@ -446,6 +448,46 @@ function (CMS_END)
 
   CMS_STACK_POP(_this)
   set_directory_properties (PROPERTIES CMS::Scope::This "${_this}")
+endfunction ()
+
+function (CMS_TEST_SCOPE _ret)
+  get_directory_property (_skip CMS::Scope::SkipOver)
+
+  if (_skip EQUAL 0)
+    CMS_RETURN(_ret true)
+  else ()
+    CMS_RETURN(_ret false)
+  endif ()
+endfunction ()
+
+function (CMS_FIND_PROGRAM _ret _cmd)
+  CMS_TEST_SCOPE(_enabled)
+
+  if (_enabled)
+    CMS_ASSERT_IDENTIFIER(${_cmd})
+
+    CMS_GET_PROPERTY(_prefix Prefix)
+    CMS_ASSERT_IDENTIFIER(${_prefix})
+
+    string (TOUPPER ${_cmd} _suffix)
+    set (_var ${_prefix}_${_suffix})
+
+    if (ARGN)
+      find_program (${_var} ${ARGN})
+    else ()
+      find_program (${_var} ${_cmd})
+    endif ()
+
+    mark_as_advanced (${_var})
+
+    if (NOT ${_var})
+      message (WARNING "CMake could not find ${_cmd} command. "
+                       " Set ${_var} manually or adjust CMAKE_PROGRAM_PATH"
+                       " and re-run the configuration.")
+    endif ()
+
+    CMS_RETURN(_ret \${\${_var}})
+  endif ()
 endfunction ()
 
 # Here starts the global initialization.
