@@ -241,6 +241,7 @@ function (CMS_INIT_GLOBAL)
     mark_as_advanced (CMS_MODIFIED)
 
     include ("${CMS_PRIVATE_DIR}/Compiler.cmake")
+    include ("${CMS_PRIVATE_DIR}/Configuration.cmake")
     include ("${CMS_PRIVATE_DIR}/Executable.cmake")
     include ("${CMS_PRIVATE_DIR}/Library.cmake")
     include ("${CMS_PRIVATE_DIR}/Package.cmake")
