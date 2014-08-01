@@ -18,7 +18,8 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-function (CMS_DEFINE_TARGET _name)
+function (CMS_DEFINE_TARGET_SCOPE _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
   CMS_GET_PROPERTY(_parentType Type)
 
   if (NOT _parentType STREQUAL "None"
@@ -28,6 +29,17 @@ function (CMS_DEFINE_TARGET _name)
   endif ()
 
   CMS_DEFINE_NAMESPACE(${_name})
+
+  CMS_INHERIT_PROPERTY(CompileDefinitions)
+  CMS_INHERIT_PROPERTY(CompileOptions)
+  CMS_INHERIT_PROPERTY(IncludeDirectories)
+  CMS_INHERIT_PROPERTY(LinkDirectories)
+  CMS_INHERIT_PROPERTY(LinkLibraries)
+endfunction ()
+
+function (CMS_DEFINE_TARGET _name)
+  CMS_DEFINE_TARGET_SCOPE(${_name})
+
   CMS_DEFINE_PROPERTY(Dependencies)
   CMS_DEFINE_PROPERTY(GeneratedFiles)
   CMS_DEFINE_PROPERTY(LinkFlags)
@@ -37,11 +49,6 @@ function (CMS_DEFINE_TARGET _name)
   CMS_DEFINE_PROPERTY(OutputSuffixVersion)
   CMS_DEFINE_PROPERTY(SourceFiles)
 
-  CMS_INHERIT_PROPERTY(CompileOptions)
-  CMS_INHERIT_PROPERTY(CompileDefinitions)
-  CMS_INHERIT_PROPERTY(IncludeDirectories)
-  CMS_INHERIT_PROPERTY(LinkDirectories)
-  CMS_INHERIT_PROPERTY(LinkLibraries)
   CMS_INHERIT_PROPERTY(PublicHeaders)
   CMS_INHERIT_PROPERTY(PublicHeaderDirectories)
   CMS_INHERIT_PROPERTY(RequiredPackages)
@@ -188,16 +195,18 @@ function (CMS_ADD_GENERATED_FILES)
 endfunction ()
 
 function (CMS_ENSURE_PACKAGES)
-  while (ARGN)
-    list (GET ARGN 0 _package)
-    list (REMOVE_AT ARGN 0)
+  CMS_GET_PROPERTY(_packages RequiredPackages)
+
+  while (_packages)
+    list (GET _packages 0 _package)
+    list (REMOVE_AT _packages 0)
 
     CMS_GET_PACKAGE_DOMAIN(_domain "${_package}")
 
     if (_domain STREQUAL LOCAL)
       CMS_QUALIFY_NAMESPACE(_qname "${_package}")
       CMS_GET_QNAME_PROPERTY(_deps "${_qname}::RequiredPackages")
-      list (APPEND ARGN ${_deps})
+      list (APPEND _packages ${_deps})
     else ()
       CMS_GET_PACKAGE_PREFIX(_prefix "${_package}")
       CMS_LOAD_PACKAGE("${_package}" PREFIX "${_prefix}")
@@ -205,20 +214,23 @@ function (CMS_ENSURE_PACKAGES)
   endwhile ()
 endfunction ()
 
-function (CMS_PREPARE_TARGET _sources)
+function (CMS_PREPARE_TARGET_SCOPE)
   CMS_GET_PROPERTY(_linkDirectories LinkDirectories)
-  CMS_GET_PROPERTY(_publicHeaders PublicHeaders)
-  CMS_GET_PROPERTY(_sourceFiles SourceFiles)
-  CMS_GET_PROPERTY(_requiredPackages RequiredPackages)
 
   if (_linkDirectories)
     link_directories (${_linkDirectories})
   endif ()
 
-  CMS_ENSURE_PACKAGES(${_requiredPackages})
-  list (APPEND _sourceFiles ${_publicHeaders})
+  CMS_ENSURE_PACKAGES()
+endfunction ()
 
-  CMS_RETURN(_sources \${_sourceFiles})
+function (CMS_PREPARE_TARGET _sources)
+  CMS_PREPARE_TARGET_SCOPE()
+
+  CMS_GET_PROPERTY(_publicHeaders PublicHeaders)
+  CMS_GET_PROPERTY(_sourceFiles SourceFiles)
+
+  CMS_RETURN(_sources \${_publicHeaders} \${_sourceFiles})
 endfunction ()
 
 function (CMS_SUBMIT_DEPENDENCIES _name)
@@ -236,17 +248,60 @@ function (CMS_SUBMIT_DEPENDENCIES _name)
   CMS_PROPAGATE_PROPERTY(RequiredVariables)
 endfunction ()
 
+function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
+  CMS_ASSERT_IDENTIFIER(${_name})
+  CMS_ASSERT_IDENTIFIER(${_compileTime})
+  CMS_ASSERT_IDENTIFIER(${_linkTime})
+
+  CMS_GET_PROPERTY(_compileDefinitions CompileDefinitions)
+  CMS_GET_PROPERTY(_compileOptions CompileOptions)
+  CMS_GET_PROPERTY(_exportName ExportName)
+  CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
+  CMS_GET_PROPERTY(_linkLibraries LinkLibraries)
+
+  if (_compileDefinitions)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
+                                 ${_compileDefinitions})
+    target_compile_definitions (${_name} ${_values})
+  endif ()
+
+  if (_compileOptions)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
+                                 ${_compileOptions})
+    target_compile_options (${_name} ${_values})
+  endif ()
+
+  if (_includeDirectories)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
+                                 ${_includeDirectories})
+    target_include_directories (${_name} ${_values})
+  endif ()
+
+  if (_linkLibraries)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values ${_linkTime} ${_linkLibraries})
+    target_link_libraries (${_name} ${_values})
+  endif ()
+
+  if (_exportName)
+    install (TARGETS "${_name}"
+             EXPORT "${_exportName}"
+             ARCHIVE DESTINATION lib
+             LIBRARY DESTINATION lib
+             RUNTIME DESTINATION bin)
+
+    CMS_APPEND_TO_PARENT_PROPERTY(ProvidedTargets ${_name})
+  endif ()
+endfunction ()
+
 function (CMS_SUBMIT_TARGET _name)
   CMS_SUBMIT_DEPENDENCIES(${_name})
 
   CMS_GET_PROPERTY(_compileOptions CompileOptions)
   CMS_GET_PROPERTY(_compileDefinitions CompileDefinitions)
   CMS_GET_PROPERTY(_dependencies Dependencies)
-  CMS_GET_PROPERTY(_exportName ExportName)
   CMS_GET_PROPERTY(_generatedFiles GeneratedFiles)
   CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
   CMS_GET_PROPERTY(_linkFlags LinkFlags)
-  CMS_GET_PROPERTY(_linkLibraries LinkLibraries)
   CMS_GET_PROPERTY(_linkerLanguage LinkerLanguage)
   CMS_GET_PROPERTY(_outputName OutputName)
   CMS_GET_PROPERTY(_outputSuffixDebug OutputSuffixDebug)
@@ -266,6 +321,21 @@ function (CMS_SUBMIT_TARGET _name)
       OUTPUT_NAME_DEBUG
       "${_outputName}${_outputSuffixDebug}${_outputSuffixVersion}")
 
+  get_target_property (_targetType ${_name} TYPE)
+
+  set (_compileTime PUBLIC)
+  set (_linkTime PRIVATE)
+
+  if (_targetType STREQUAL "EXECUTABLE")
+    set (_compileTime PRIVATE)
+  endif ()
+
+  if (_targetType STREQUAL "STATIC_LIBRARY")
+    set (_linkTime INTERFACE)
+  endif ()
+
+  CMS_SUBMIT_TARGET_SCOPE(${_name} ${_compileTime} ${_linkTime})
+
   if (_publicHeaderDirectories)
     list (APPEND _includeDirectories PUBLIC)
 
@@ -275,22 +345,6 @@ function (CMS_SUBMIT_TARGET _name)
 
     list (APPEND _includeDirectories
           INTERFACE $<INSTALL_INTERFACE:include>)
-  endif ()
-
-  if (_includeDirectories)
-    target_include_directories (${_name} ${_includeDirectories})
-  endif ()
-
-  if (_compileOptions)
-    target_compile_options (${_name} ${_compileOptions})
-  endif ()
-
-  if (_compileDefinitions)
-    target_compile_definitions (${_name} ${_compileDefinitions})
-  endif ()
-
-  if (_linkLibraries)
-    target_link_libraries (${_name} ${_linkLibraries})
   endif ()
 
   if (_generatedFiles)
@@ -316,15 +370,5 @@ function (CMS_SUBMIT_TARGET _name)
       CMS_GET_PROPERTY(_files "SourceGroup[${_sourceGroup}]")
       source_group ("${_sourceGroup}" FILES "${_files}")
     endforeach ()
-  endif ()
-
-  if (_exportName)
-    install (TARGETS "${_name}"
-             EXPORT "${_exportName}"
-             ARCHIVE DESTINATION lib
-             LIBRARY DESTINATION lib
-             RUNTIME DESTINATION bin)
-
-    CMS_APPEND_TO_PARENT_PROPERTY(ProvidedTargets ${_name})
   endif ()
 endfunction ()
