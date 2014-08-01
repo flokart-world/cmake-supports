@@ -186,3 +186,8 @@ function (CMS_GET_VARIABLE_EXPR _ret _name)
     message (FATAL_ERROR "Variable ${_name} is not loaded.")
   endif ()
 endfunction ()
+
+function (CMS_SET_VARIABLE _name _value)
+  set (${_name} ${_value})
+  CMS_REGISTER_VARIABLE(${_name})
+endfunction ()
