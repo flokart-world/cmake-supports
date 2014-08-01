@@ -341,14 +341,13 @@ function (CMS_SUBMIT_TARGET _name)
   CMS_SUBMIT_TARGET_SCOPE(${_name} ${_compileTime} ${_linkTime})
 
   if (_publicHeaderDirectories)
-    list (APPEND _includeDirectories PUBLIC)
-
     foreach (_dir IN LISTS _publicHeaderDirectories)
-      list (APPEND _includeDirectories "$<BUILD_INTERFACE:${_dir}>")
+      target_include_directories (${_name} ${_compileTime}
+                                  "$<BUILD_INTERFACE:${_dir}>")
     endforeach ()
 
-    list (APPEND _includeDirectories
-          INTERFACE $<INSTALL_INTERFACE:include>)
+    target_include_directories (${_name} ${_compileTime}
+                                $<INSTALL_INTERFACE:include>)
   endif ()
 
   if (_generatedFiles)
