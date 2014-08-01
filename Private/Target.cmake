@@ -331,7 +331,7 @@ function (CMS_SUBMIT_TARGET _name)
   endif ()
 
   if (_targetType STREQUAL "STATIC_LIBRARY")
-    set (_linkTime INTERFACE)
+    set (_linkTime PUBLIC)
   endif ()
 
   CMS_SUBMIT_TARGET_SCOPE(${_name} ${_compileTime} ${_linkTime})
