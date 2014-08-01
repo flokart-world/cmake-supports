@@ -377,7 +377,7 @@ function (CMS_NORMALIZE_DEPENDENCY)
   list (REMOVE_DUPLICATES _requiredPackages)
 
   if (_providedPackages)
-    list (REMOVE_ITEM _requiredPackages "${_providedPackages}")
+    list (REMOVE_ITEM _requiredPackages ${_providedPackages})
   endif ()
 
   CMS_SET_PROPERTY(RequiredPackages "${_requiredPackages}")
