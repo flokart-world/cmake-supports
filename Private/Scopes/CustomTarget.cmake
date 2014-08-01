@@ -24,8 +24,13 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
 
     set (_options "")
     CMS_GET_PROPERTY(_commandLine CommandLine)
+    CMS_GET_PROPERTY(_includeWithinAll IncludeWithinAll)
     CMS_GET_PROPERTY(_workingDirectory WorkingDirectory)
     CMS_PREPARE_TARGET(_files)
+
+    if (_includeWithinAll)
+      list (APPEND _options ALL)
+    endif ()
 
     if (_commandLine)
       list (APPEND _options COMMAND ${_commandLine})
@@ -54,6 +59,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   CMS_INHERIT_PROPERTY(ExportName)
 
   CMS_DEFINE_PROPERTY(CommandLine)
+  CMS_DEFINE_PROPERTY(IncludeWithinAll)
   CMS_DEFINE_PROPERTY(WorkingDirectory)
 
   CMS_STACK_PUSH("${_name}")
