@@ -244,15 +244,18 @@ function (CMS_EXPAND_VARIABLES _ret)
 
   foreach (_string IN LISTS ARGN)
     set (_subst "")
+    set (_pattern [=[\*\(([^\)]*)\)]=])
 
-    while (_string MATCHES "@([^@]*)@")
-      string (REGEX REPLACE "@([^@]*)@" ";\\1;" _parts ${_string})
+    while (_string MATCHES "${_pattern}")
+      string (REGEX REPLACE ${_pattern} ";\\1;" _parts ${_string})
 
-      list (GET _parts 0 1 2 _literal _name _string)
+      list (GET _parts 0 _literal)
+      list (GET _parts 1 _name)
+      list (GET _parts 2 _string)
       list (APPEND _subst ${_literal})
 
       if (_name STREQUAL "")
-        list (APPEND _subst @)
+        list (APPEND _subst *)
       else ()
         CMS_USE_VARIABLE(${_name})
         CMS_GET_VARIABLE_EXPR(_expr ${_name})
