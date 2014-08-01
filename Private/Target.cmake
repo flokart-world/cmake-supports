@@ -233,6 +233,13 @@ function (CMS_PREPARE_TARGET _sources)
   CMS_RETURN(_sources \${_publicHeaders} \${_sourceFiles})
 endfunction ()
 
+function (CMS_PROPAGATE_DEPENDENCIES)
+  CMS_PROPAGATE_PROPERTY(ProvidedPackages)
+  CMS_PROPAGATE_PROPERTY(ProvidedTargets)
+  CMS_PROPAGATE_PROPERTY(RequiredPackages)
+  CMS_PROPAGATE_PROPERTY(RequiredVariables)
+endfunction ()
+
 function (CMS_SUBMIT_DEPENDENCIES _name)
   CMS_ASSERT_IDENTIFIER(${_name})
 
@@ -242,10 +249,7 @@ function (CMS_SUBMIT_DEPENDENCIES _name)
     add_dependencies (${_name} ${_dependencies})
   endif ()
 
-  CMS_PROPAGATE_PROPERTY(ProvidedPackages)
-  CMS_PROPAGATE_PROPERTY(ProvidedTargets)
-  CMS_PROPAGATE_PROPERTY(RequiredPackages)
-  CMS_PROPAGATE_PROPERTY(RequiredVariables)
+  CMS_PROPAGATE_DEPENDENCIES()
 endfunction ()
 
 function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
