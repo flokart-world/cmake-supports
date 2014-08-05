@@ -134,11 +134,13 @@ function (CMS_SET_PACKAGE_COMPONENTS)
     string (REGEX REPLACE ${_debugExpr} "" _location "${_library}")
     string (REGEX REPLACE ${_debugExpr} \\1 _locationDebug "${_library}")
 
-    add_library ("${_component}" STATIC IMPORTED)
-    set_target_properties ("${_component}"
-                           PROPERTIES
-                           IMPORTED_LOCATION "${_location}"
-                           IMPORTED_LOCATION_DEBUG "${_locationDebug}")
+    if (NOT TARGET ${_component})
+      add_library ("${_component}" STATIC IMPORTED)
+      set_target_properties ("${_component}"
+                             PROPERTIES
+                             IMPORTED_LOCATION "${_location}"
+                             IMPORTED_LOCATION_DEBUG "${_locationDebug}")
+    endif ()
   endwhile ()
 
   CMS_MAP_PROMOTE_TO_PARENT_SCOPE(CMS_IMPORTED_COMPONENTS)
