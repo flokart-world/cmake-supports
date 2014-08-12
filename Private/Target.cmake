@@ -316,14 +316,20 @@ function (CMS_SUBMIT_TARGET _name)
 
   list (REMOVE_DUPLICATES _publicHeaderDirectories)
 
-  set_target_properties (${_name}
-      PROPERTIES
-      LINKER_LANGUAGE "${_linkerLanguage}"
-      LINK_FLAGS "${_linkFlags}"
-      OUTPUT_NAME
-      "${_outputName}${_outputSuffixVersion}"
-      OUTPUT_NAME_DEBUG
-      "${_outputName}${_outputSuffixDebug}${_outputSuffixVersion}")
+  set_target_properties (${_name} PROPERTIES LINK_FLAGS "${_linkFlags}")
+
+  if (_outputName)
+    set_target_properties (${_name}
+        PROPERTIES
+        OUTPUT_NAME
+        "${_outputName}${_outputSuffixVersion}"
+        OUTPUT_NAME_DEBUG
+        "${_outputName}${_outputSuffixDebug}${_outputSuffixVersion}")
+  endif ()
+
+  if (_linkerLanguage)
+    set_target_properties (${_name} PROPERTIES LINK_FLAGS "${_linkerLanguage}")
+  endif ()
 
   get_target_property (_targetType ${_name} TYPE)
 
