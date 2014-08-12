@@ -32,7 +32,11 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   endif ()
 
   string (REGEX REPLACE "^lib" "" _coreName "${_name}")
-  set (_outputName "${_prefix}${_coreName}${CMS_TOOLSET_SUFFIX_CXX}-mt")
+  set (_outputName "${_prefix}${_coreName}${CMS_TOOLSET_SUFFIX_CXX}")
+
+  if (WIN32)
+    set (_outputName "${_outputName}-mt")
+  endif ()
 
   CMS_DEFINE_LIBRARY("${_name}")
   CMS_SET_PROPERTY(LinkerLanguage CXX)
