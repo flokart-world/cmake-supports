@@ -27,7 +27,8 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
 
   CMS_DEFINE_LIBRARY("${_name}")
   CMS_SET_PROPERTY(LinkerLanguage C)
-  CMS_SET_PROPERTY(OutputName "${_name}$<$<CONFIG:Debug>:d>")
+  CMS_SET_PROPERTY(OutputName ${_name})
+  CMS_SET_PROPERTY(OutputSuffixDebug d)
 
   CMS_STACK_PUSH("${_name}")
 elseif (CMS_SCOPE_CALL STREQUAL "END")
