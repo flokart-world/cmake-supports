@@ -359,12 +359,20 @@ function (CMS_SUBMIT_TARGET _name)
     foreach (_source IN LISTS _sourceFiles)
       set (_prefix "SourceFile[${_source}]::")
 
-      CMS_GET_PROPERTY(_definitions "${_prefix}CompileDefinitions")
-      CMS_GET_PROPERTY(_options "${_prefix}CompileOptions")
+      CMS_GET_PROPERTY(_values "${_prefix}CompileDefinitions")
 
-      set_source_files_properties ("${_source}" PROPERTIES
-                                   COMPILE_DEFINITIONS "${_definitions}"
-                                   COMPILE_FLAGS "${_options}")
+      if (_values)
+        set_source_files_properties (${_source} PROPERTIES
+                                     COMPILE_DEFINITIONS "${_values}")
+      endif ()
+
+      CMS_GET_PROPERTY(_values "${_prefix}CompileOptions")
+
+      if (_values)
+        CMS_JOIN(_values " " ${_values})
+        set_source_files_properties (${_source} PROPERTIES
+                                     COMPILE_FLAGS ${_values})
+      endif ()
     endforeach ()
   endif ()
 
