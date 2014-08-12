@@ -138,6 +138,16 @@ function (CMS_LOAD_PACKAGE _name)
   endif ()
 endfunction ()
 
+function (CMS_PROVIDE_PACKAGE _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
+  CMS_TEST_PACKAGE(_loaded ${_name})
+
+  if (NOT _loaded)
+    CMS_REGISTER_PACKAGE(${_name})
+    CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_name})
+  endif ()
+endfunction ()
+
 function (CMS_TEST_VARIABLE _ret _name)
   CMS_QUALIFY_VARIABLE(_qname ${_name})
   get_property (_defined TARGET CMSVariables PROPERTY ${_qname} DEFINED)

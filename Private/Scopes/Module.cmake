@@ -71,7 +71,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
           "include (\"\${CMAKE_CURRENT_LIST_DIR}/${_name}Targets.cmake\")")
 
     foreach (_package IN LISTS _providedPackages)
-      list (APPEND _configLines "CMS_REGISTER_PACKAGE(\"${_package}\")")
+      list (APPEND _configLines "CMS_PROVIDE_PACKAGE(\"${_package}\")")
     endforeach ()
 
     CMS_JOIN(_configBody "\n" ${_configLines})
