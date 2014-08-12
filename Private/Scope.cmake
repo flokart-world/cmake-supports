@@ -446,7 +446,7 @@ function (CMS_SKIP_SCOPE)
   if (CMS_SCOPE_CALL STREQUAL "BEGIN" AND _skip EQUAL 0)
     set_directory_properties (PROPERTIES
                               CMS::Scope::SkipOver 1
-                              CMS::Scope::This "")
+                              CMS::Scope::This false)
   else ()
     message (FATAL_ERROR "CMS_SKIP_SCOPE call is allowed only in scope entry.")
   endif ()
