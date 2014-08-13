@@ -18,8 +18,6 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY CMS::Package::Domain)
-
 function (CMS_QUALIFY_PACKAGE_PREFIX _ret _name)
   CMS_ASSERT_IDENTIFIER(${_name})
   CMS_RETURN(_ret CMS::Package::Prefix[\${_name}])
@@ -57,6 +55,26 @@ function (CMS_PACKAGE_DOMAIN _ret _package)
   CMS_RETURN(_ret CMS::Package::Domain[\${_package}])
 endfunction ()
 
+function (CMS_PACKAGE_COMPONENTS _ret _package)
+  CMS_RETURN(_ret CMS::Package::Components[\${_package}])
+endfunction ()
+
+function (CMS_ADD_TO_CMAKE_TARGET_PROPERTY _target _property)
+  get_property (_defined TARGET ${_target} PROPERTY ${_property} DEFINED)
+
+  if (_defined)
+    get_target_property (_values ${_target} ${_property})
+    list (APPEND _values ${ARGN})
+    list (REMOVE_DUPLICATES _values)
+  else ()
+    set (_values ${ARGN})
+  endif ()
+
+  set_target_properties (${_target} PROPERTIES ${_property} "${_values}")
+endfunction ()
+
+# This function may be called more than once for a package within a same
+# scope, due to set of required components.
 function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
   CMS_PACKAGE_INTERFACE(_target ${_package})
 
@@ -64,21 +82,32 @@ function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
     link_directories (${${_prefix}_LIBRARY_DIRS})
   endif ()
 
-  add_library (${_target} INTERFACE IMPORTED)
+  if (NOT TARGET ${_target})
+    add_library (${_target} INTERFACE IMPORTED)
+  endif ()
 
   if (${_prefix}_INCLUDE_DIRS)
-    set_target_properties (${_target} PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${${_prefix}_INCLUDE_DIRS}")
+    CMS_ADD_TO_CMAKE_TARGET_PROPERTY(${_target}
+                                     INTERFACE_INCLUDE_DIRECTORIES
+                                     ${${_prefix}_INCLUDE_DIRS})
   endif ()
 
   if (${_prefix}_LIBRARIES)
-    set_target_properties (${_target} PROPERTIES
-        INTERFACE_LINK_LIBRARIES "${${_prefix}_LIBRARIES}")
+    CMS_ADD_TO_CMAKE_TARGET_PROPERTY(${_target}
+                                     INTERFACE_LINK_LIBRARIES
+                                     ${${_prefix}_LIBRARIES})
   endif ()
 
   CMS_PACKAGE_DOMAIN(_qname "${_target}")
   CMS_ENSURE_CMAKE_PROPERTY(GLOBAL PROPERTY "${_qname}")
   set_property (GLOBAL PROPERTY "${_qname}" FOREIGN)
+
+  CMS_PACKAGE_COMPONENTS(_qname ${_target})
+  CMS_ENSURE_CMAKE_PROPERTY(GLOBAL PROPERTY ${_qname})
+  get_cmake_property (_components ${_qname})
+  list (APPEND _components ${ARGN})
+  list (REMOVE_DUPLICATES _components)
+  set_property (GLOBAL PROPERTY ${_qname} "${_components}")
 endfunction ()
 
 function (CMS_SUBMIT_PACKAGE _package)
@@ -89,33 +118,73 @@ function (CMS_SUBMIT_PACKAGE _package)
   CMS_PACKAGE_DOMAIN(_qname "${_target}")
   CMS_DEFINE_CMAKE_PROPERTY(GLOBAL PROPERTY "${_qname}")
   set_property (GLOBAL PROPERTY "${_qname}" LOCAL)
+
+  CMS_PACKAGE_COMPONENTS(_qname ${_target})
+  CMS_DEFINE_CMAKE_PROPERTY(GLOBAL PROPERTY ${_qname})
+  set_property (GLOBAL PROPERTY ${_qname} "${ARGN}")
 endfunction ()
 
 function (CMS_TEST_PACKAGE _ret _name)
   CMS_PACKAGE_INTERFACE(_target ${_name})
 
   if (TARGET "${_target}")
-    CMS_RETURN(_ret true)
+    CMS_PACKAGE_COMPONENTS(_qname ${_target})
+    get_cmake_property (_loadedComponents ${_qname})
+
+    if (_loadedComponents)
+      list (REMOVE_ITEM ARGN ${_loadedComponents})
+    endif ()
+
+    list (LENGTH ARGN _length)
+
+    if (_length EQUAL 0)
+      CMS_RETURN(_ret true)
+    else ()
+      CMS_RETURN(_ret false)
+    endif ()
   else ()
     CMS_RETURN(_ret false)
   endif ()
 endfunction ()
 
 function (CMS_GET_PACKAGE_DOMAIN _ret _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
+
   CMS_PACKAGE_INTERFACE(_target "${_name}")
+  CMS_PACKAGE_DOMAIN(_qname ${_target})
+  get_cmake_property (_domain ${_qname})
 
-  if (TARGET "${_target}")
-    CMS_PACKAGE_DOMAIN(_qname "${_target}")
-    get_property (_domain GLOBAL PROPERTY "${_qname}")
+  CMS_RETURN(_ret \${_domain})
+endfunction ()
 
-    CMS_RETURN(_ret \${_domain})
-  else ()
-    CMS_RETURN(_ret \${_name}-NOTFOUND)
+function (CMS_PARSE_REQUIRED_COMPONENTS _ret)
+  if (ARGN)
+    list (GET ARGN 0 _top)
+
+    if (_top STREQUAL "PREFIX")
+      list (GET ARGN 1 _prefix)
+      list (REMOVE_AT ARGN 0 1)
+    endif ()
   endif ()
+
+  set (_packageName CMS_PARSE_ARGUMENTS)
+  set (_prefix CMS_PACKAGE)
+
+  find_package (${_packageName} ${ARGN}
+                CONFIG CONFIGS PackageArgumentParser.cmake
+                       PATHS ${CMS_PRIVATE_DIR}
+                       NO_DEFAULT_PATH)
+  mark_as_advanced (${_packageName}_DIR)
+
+  CMS_RETURN(_ret [[${${_prefix}_REQUIRED_COMPONENTS}]])
 endfunction ()
 
 function (CMS_LOAD_PACKAGE _name)
-  CMS_TEST_PACKAGE(_loaded ${_name})
+  CMS_PARSE_REQUIRED_COMPONENTS(_components ${ARGN})
+
+  # We are not sure how we should handle optional components.
+  # Right now, they are entirely ignored around the dependency management.
+  CMS_TEST_PACKAGE(_loaded ${_name} ${_components})
 
   if (NOT _loaded)
     set (_prefix "${_name}")
@@ -133,7 +202,7 @@ function (CMS_LOAD_PACKAGE _name)
 
     if (${_prefix}_FOUND)
       CMS_REGISTER_PACKAGE(${_name} ${_prefix})
-      CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix})
+      CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix} ${_components})
     endif ()
   endif ()
 endfunction ()
@@ -143,8 +212,7 @@ function (CMS_PROVIDE_PACKAGE _name)
   CMS_TEST_PACKAGE(_loaded ${_name})
 
   if (NOT _loaded)
-    CMS_REGISTER_PACKAGE(${_name})
-    CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_name})
+    CMS_SUBMIT_PACKAGE(${_name} ${ARGN})
   endif ()
 endfunction ()
 

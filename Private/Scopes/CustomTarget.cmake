@@ -49,7 +49,6 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
 
     add_custom_target (${_name} ${_options})
     CMS_SUBMIT_DEPENDENCIES(${_name})
-    CMS_PROPAGATE_PROPERTY(RequiredPackages)
   endfunction ()
 elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   list (GET ARGN 0 _name)

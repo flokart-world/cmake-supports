@@ -195,6 +195,22 @@ function (CMS_END_PACKAGE)
   CMS_PROMOTE_TO_PARENT_SCOPE(CMS_PACKAGE_STACK)
 endfunction ()
 
+function (CMS_DECLARE_PROVIDED_TARGETS _package)
+  foreach (_component IN LISTS ${_package}_FIND_COMPONENTS)
+    if (${_package}_FIND_REQUIRED_${_component})
+      list (FIND ARGN ${_component} _index)
+
+      if (_index EQUAL -1)
+        set (${_package}_FOUND false PARENT_SCOPE)
+        set (${_package}_NOT_FOUND_MESSAGE
+             "${_package} doesn't provide ${_component}."
+             PARENT_SCOPE)
+        break ()
+      endif ()
+    endif ()
+  endforeach ()
+endfunction ()
+
 function (CMS_LOAD_CONFIG_AS_MODULE _name _path)
   set (_options "${${_name}_FIND_VERSION}")
 

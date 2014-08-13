@@ -55,7 +55,16 @@ function (CMS_DEFINE_TARGET _name)
   CMS_INHERIT_PROPERTY(SourceGroups)
   CMS_INHERIT_PROPERTY(Version)
 
+  CMS_GET_PROPERTY(_requiredPackages RequiredPackages)
   CMS_GET_PROPERTY(_groups SourceGroups)
+
+  foreach (_package IN LISTS _requiredPackages)
+    CMS_ASSERT_IDENTIFIER(${_package})
+    set (_name RequiredComponents[${_package}])
+
+    CMS_DEFINE_PROPERTY(${_name})
+    CMS_INHERIT_PROPERTY(${_name})
+  endforeach ()
 
   foreach (_group IN LISTS _groups)
     set (_name "SourceGroup[${_group}]")
@@ -196,6 +205,7 @@ endfunction ()
 
 function (CMS_ENSURE_PACKAGES)
   CMS_GET_PROPERTY(_packages RequiredPackages)
+  set (_foreignPackages "")
 
   while (_packages)
     list (GET _packages 0 _package)
@@ -203,15 +213,30 @@ function (CMS_ENSURE_PACKAGES)
 
     CMS_GET_PACKAGE_DOMAIN(_domain "${_package}")
 
-    if (_domain STREQUAL LOCAL)
+    if (_domain STREQUAL "LOCAL")
       CMS_QUALIFY_NAMESPACE(_qname "${_package}")
       CMS_GET_QNAME_PROPERTY(_deps "${_qname}::RequiredPackages")
       list (APPEND _packages ${_deps})
+      list (REMOVE_DUPLICATES _packages)
+
+      foreach (_package IN LISTS _deps)
+        set (_key RequiredComponents[${_package}])
+        CMS_GET_QNAME_PROPERTY(_components ${_qname}::${_key})
+        CMS_ADD_REQUIRED_COMPONENTS(${_package} ${_components})
+      endforeach ()
+    elseif (_domain STREQUAL "FOREIGN")
+      list (APPEND _foreignPackages ${_package})
     else ()
-      CMS_GET_PACKAGE_PREFIX(_prefix "${_package}")
-      CMS_LOAD_PACKAGE("${_package}" PREFIX "${_prefix}")
+      message (FATAL_ERROR "Unrecognized domain: ${_domain} (${_package})")
     endif ()
   endwhile ()
+
+  list (REMOVE_DUPLICATES _foreignPackages)
+
+  foreach (_package IN LISTS _foreignPackages)
+    CMS_REPLAY_PACKAGE_ARGS(_params ${_package} REQUIRED)
+    CMS_LOAD_PACKAGE(${_package} ${_params})
+  endforeach ()
 endfunction ()
 
 function (CMS_PREPARE_TARGET_SCOPE)
@@ -233,13 +258,6 @@ function (CMS_PREPARE_TARGET _sources)
   CMS_RETURN(_sources \${_publicHeaders} \${_sourceFiles})
 endfunction ()
 
-function (CMS_PROPAGATE_DEPENDENCIES)
-  CMS_PROPAGATE_PROPERTY(ProvidedPackages)
-  CMS_PROPAGATE_PROPERTY(ProvidedTargets)
-  CMS_PROPAGATE_PROPERTY(RequiredPackages)
-  CMS_PROPAGATE_PROPERTY(RequiredVariables)
-endfunction ()
-
 function (CMS_SUBMIT_DEPENDENCIES _name)
   CMS_ASSERT_IDENTIFIER(${_name})
 
@@ -248,8 +266,6 @@ function (CMS_SUBMIT_DEPENDENCIES _name)
   if (_dependencies)
     add_dependencies (${_name} ${_dependencies})
   endif ()
-
-  CMS_PROPAGATE_DEPENDENCIES()
 endfunction ()
 
 function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
@@ -293,7 +309,7 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
              LIBRARY DESTINATION lib
              RUNTIME DESTINATION bin)
 
-    CMS_APPEND_TO_PARENT_PROPERTY(ProvidedTargets ${_name})
+    CMS_ADD_TO_PARENT_PROPERTY(ProvidedTargets ${_name})
   endif ()
 endfunction ()
 

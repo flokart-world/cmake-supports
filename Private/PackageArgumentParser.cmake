@@ -18,32 +18,33 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-if (CMS_SCOPE_CALL STREQUAL "INIT")
-  # Nothing to do
-elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
-  list (GET ARGN 0 _name)
-  CMS_GET_PROPERTY(_parentType Type)
+# This pseudo configuration is loaded by CMS_LOAD_PACKAGE() in Package.cmake.
+# Assumes that variable _prefix and _packageName are given.
 
-  if (NOT _parentType STREQUAL "None"
-      AND NOT _parentType STREQUAL "Module"
-      AND NOT _parentType STREQUAL "EmbeddedPackage")
-    message (FATAL_ERROR "EmbeddedPackage must not be child of target.")
+set (${_packageName}_FOUND true)
+
+foreach (_member REQUIRED
+                 QUIETLY
+                 VERSION
+                 VERSION_MAJOR
+                 VERSION_MINOR
+                 VERSION_PATCH
+                 VERSION_TWEAK
+                 VERSION_COUNT
+                 VERSION_EXACT
+                 COMPONENTS)
+  set (${_prefix}_${_member} ${${_packageName}_FIND_${_member}})
+endforeach ()
+
+set (${_prefix}_REQUIRED_COMPONENTS "")
+set (${_prefix}_OPTIONAL_COMPONENTS "")
+
+foreach (_component IN LISTS ${_prefix}_COMPONENTS)
+  if (${_packageName}_FIND_REQUIRED_${_component})
+    set (_type REQUIRED)
+  else ()
+    set (_type OPTIONAL)
   endif ()
 
-  message (STATUS "Entering the embedded package ${_name}.")
-
-  CMS_DEFINE_NAMESPACE("${_name}")
-  CMS_INHERIT_PROPERTY(ExportName)
-
-  CMS_STACK_PUSH("${_name}")
-elseif (CMS_SCOPE_CALL STREQUAL "END")
-  CMS_STACK_POP(_name)
-
-  CMS_IMPORT_TARGET_DEPENDENCIES()
-  CMS_SUBMIT_PACKAGE("${_name}")
-
-  CMS_PROPAGATE_PROPERTY(ProvidedTargets)
-  CMS_ADD_TO_PARENT_PROPERTY(ProvidedPackages "${_name}")
-
-  message (STATUS "Leaving the embedded package ${_name}.")
-endif ()
+  list (APPEND ${_prefix}_${_type}_COMPONENTS ${_component})
+endforeach ()

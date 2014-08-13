@@ -46,15 +46,10 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
          "find_package (CMakeSupports ${CMakeSupports_VERSION} REQUIRED)")
 
     foreach (_package IN LISTS _requiredPackages)
-      CMS_GET_PACKAGE_PREFIX(_prefix ${_package})
+      CMS_REPLAY_PACKAGE_ARGS(_packageParams ${_package} REQUIRED)
+      CMS_JOIN(_suffix " " ${_packageParams})
 
-      if (_prefix STREQUAL _package)
-        list (APPEND _configLines
-              "CMS_LOAD_PACKAGE(\"${_package}\" REQUIRED)")
-      else ()
-        list (APPEND _configLines
-              "CMS_LOAD_PACKAGE(\"${_package}\" PREFIX ${_prefix} REQUIRED)")
-      endif ()
+      list (APPEND _configLines "CMS_LOAD_PACKAGE(\"${_package}\" ${_suffix})")
     endforeach ()
 
     foreach (_variable IN LISTS _requiredVariables)
@@ -71,8 +66,24 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
           "include (\"\${CMAKE_CURRENT_LIST_DIR}/${_name}Targets.cmake\")")
 
     foreach (_package IN LISTS _providedPackages)
-      list (APPEND _configLines "CMS_PROVIDE_PACKAGE(\"${_package}\")")
+      CMS_QUALIFY_NAMESPACE(_ns ${_package})
+      CMS_GET_QNAME_PROPERTY(_targets ${_ns}::ProvidedTargets)
+      list (LENGTH _targets _size)
+
+      if (_size EQUAL 0)
+        set (_suffix "")
+      else ()
+        CMS_JOIN(_suffix " " ${_targets})
+        set (_suffix " ${_suffix}")
+      endif ()
+
+      list (APPEND _configLines
+            "CMS_PROVIDE_PACKAGE(\"${_package}\"${_suffix})")
     endforeach ()
+
+    CMS_JOIN(_targetList " " ${_providedTargets})
+    list (APPEND _configLines
+          "CMS_DECLARE_PROVIDED_TARGETS(${_name} ${_targetList})")
 
     CMS_JOIN(_configBody "\n" ${_configLines})
     file (WRITE ${_cmakeConfig} "${_configBody}\n")
@@ -84,7 +95,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
           "CMS_LOAD_CONFIG_AS_MODULE(${_name} \"${CMAKE_INSTALL_PREFIX}\")\n")
     install (FILES ${_module} DESTINATION ${CMS_MODULE_DIR})
 
-    CMS_SUBMIT_PACKAGE(${_name})
+    CMS_SUBMIT_PACKAGE(${_name} ${_providedTargets})
     export (PACKAGE ${_name})
   endfunction ()
 elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
@@ -126,10 +137,11 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
 elseif (CMS_SCOPE_CALL STREQUAL "END")
   CMS_STACK_POP(_name)
 
-  CMS_NORMALIZE_DEPENDENCY()
+  CMS_IMPORT_TARGET_DEPENDENCIES()
   CMS_BUILD_MODULE("${_name}")
 
-  CMS_APPEND_TO_PARENT_PROPERTY(RequiredPackages "${_name}")
+  CMS_ADD_TO_PARENT_PROPERTY(RequiredPackages "${_name}")
+  CMS_ADD_TO_PARENT_PROPERTY(RequiredComponents[${_name}])
 
   message (STATUS "Leaving the module ${_name}.")
 endif ()

@@ -60,7 +60,6 @@ elseif (CMS_SCOPE_CALL STREQUAL "END")
   CMS_PREPARE_TARGET_SCOPE()
   add_library (${_name} INTERFACE)
   CMS_SUBMIT_TARGET_SCOPE(${_name} INTERFACE INTERFACE)
-  CMS_PROPAGATE_DEPENDENCIES()
 
   message (STATUS "Leaving the interface library ${_name}.")
 endif ()
