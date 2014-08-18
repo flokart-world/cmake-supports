@@ -212,7 +212,8 @@ function (CMS_PROVIDE_PACKAGE _name)
   CMS_TEST_PACKAGE(_loaded ${_name})
 
   if (NOT _loaded)
-    CMS_SUBMIT_PACKAGE(${_name} ${ARGN})
+    CMS_REGISTER_PACKAGE(${_name} ${_prefix})
+    CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix} ${ARGN})
   endif ()
 endfunction ()
 
