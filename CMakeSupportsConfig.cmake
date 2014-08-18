@@ -233,6 +233,7 @@ endfunction ()
 # Here starts the global initialization.
 
 function (CMS_INIT_GLOBAL)
+  mark_as_advanced (CMakeSupports_DIR)
   get_property (_initialized DIRECTORY PROPERTY CMS::Initialized DEFINED)
 
   if (NOT _initialized)

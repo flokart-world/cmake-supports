@@ -83,7 +83,8 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
 
     CMS_JOIN(_targetList " " ${_providedTargets})
     list (APPEND _configLines
-          "CMS_DECLARE_PROVIDED_TARGETS(${_name} ${_targetList})")
+          "CMS_DECLARE_PROVIDED_TARGETS(${_name} ${_targetList})"
+          "mark_as_advanced (${_name}_DIR)")
 
     CMS_JOIN(_configBody "\n" ${_configLines})
     file (WRITE ${_cmakeConfig} "${_configBody}\n")
