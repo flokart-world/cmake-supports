@@ -373,7 +373,7 @@ function (CMS_SUBMIT_TARGET _name)
   endif ()
 
   if (_generatedFiles)
-    set_source_files_properties ("${_generatedFiles}" PROPERTIES
+    set_source_files_properties (${_generatedFiles} PROPERTIES
                                  GENERATED true)
   endif ()
 
