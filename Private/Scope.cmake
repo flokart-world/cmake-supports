@@ -489,6 +489,53 @@ function (CMS_PROPAGATE_PROPERTY _key)
   CMS_ADD_TO_PARENT_PROPERTY("${_key}" ${_values})
 endfunction ()
 
+function (CMS_SET_VARIABLE _name _value)
+  CMS_ASSERT_IDENTIFIER(${_name})
+  CMS_ASSERT_IDENTIFIER(${_value})
+
+  set (_qname Variable[${_name}])
+  CMS_PROPERTY_DEFINED(_defined ${_qname})
+
+  if (NOT _defined)
+    CMS_DEFINE_PROPERTY(${_qname})
+  endif ()
+
+  CMS_SET_PROPERTY(${_qname} ${_value})
+endfunction ()
+
+function (CMS_GET_VARIABLE _ret _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
+  set (_from "")
+  set (_qname Variable[${_name}])
+
+  while (ARGN)
+    list (GET ARGN 0 _arg)
+    list (REMOVE_AT ARGN 0)
+
+    if (_arg STREQUAL "FROM")
+      list (LENGTH ARGN _size)
+
+      if (_size GREATER 0)
+        list (GET ARGN 0 _from)
+        list (REMOVE_AT ARGN 0)
+      else ()
+        message (FATAL_ERROR "FROM option requires one argument.")
+      endif ()
+    else ()
+      message (FATAL_ERROR "Unrecognized option: \"${_arg}\"")
+    endif ()
+  endwhile ()
+
+  if (_from)
+    CMS_QUALIFY_NAMESPACE(_ns ${_from})
+    CMS_GET_QNAME_PROPERTY(_value ${_ns}::${_qname})
+  else ()
+    CMS_GET_PROPERTY(_value ${_qname})
+  endif ()
+
+  CMS_RETURN(_ret \${_value})
+endfunction ()
+
 function (CMS_IMPORT_TARGET_DEPENDENCIES)
   CMS_GET_PROPERTY(_targets ProvidedTargets)
 
