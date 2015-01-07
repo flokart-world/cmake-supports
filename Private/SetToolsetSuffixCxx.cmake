@@ -38,14 +38,18 @@
 #=============================================================================
 
 function(_Boost_GUESS_COMPILER_PREFIX _ret)
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"
-      OR "${CMAKE_CXX_COMPILER}" MATCHES "icl"
-      OR "${CMAKE_CXX_COMPILER}" MATCHES "icpc")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel"
+      OR CMAKE_CXX_COMPILER MATCHES "icl"
+      OR CMAKE_CXX_COMPILER MATCHES "icpc")
     if(WIN32)
       set (_boost_COMPILER "-iw")
     else()
       set (_boost_COMPILER "-il")
     endif()
+  elseif (MSVC14)
+    set(_boost_COMPILER "-vc140")
+  elseif (MSVC12)
+    set(_boost_COMPILER "-vc120")
   elseif (MSVC11)
     set(_boost_COMPILER "-vc110")
   elseif (MSVC10)
@@ -62,7 +66,7 @@ function(_Boost_GUESS_COMPILER_PREFIX _ret)
     set(_boost_COMPILER "-vc6") # yes, this is correct
   elseif (BORLAND)
     set(_boost_COMPILER "-bcb")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "SunPro")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
     set(_boost_COMPILER "-sw")
   elseif (MINGW)
     if(${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION} VERSION_LESS 1.34)
