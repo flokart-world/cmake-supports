@@ -597,11 +597,14 @@ function (CMS_BEGIN CMS_SCOPE_TYPE)
 
   if (_skip EQUAL 0)
     set (CMS_SCOPE_CALL BEGIN)
-    include ("${CMS_PRIVATE_DIR}/Scopes/${CMS_SCOPE_TYPE}.cmake")
   else ()
+    set (CMS_SCOPE_CALL SKIP)
+
     math (EXPR _skip "${_skip} + 1")
     set_directory_properties (PROPERTIES CMS::Scope::SkipOver "${_skip}")
   endif ()
+
+  include ("${CMS_PRIVATE_DIR}/Scopes/${CMS_SCOPE_TYPE}.cmake")
 
   CMS_STACK_PUSH("${CMS_SCOPE_TYPE}")
 endfunction ()

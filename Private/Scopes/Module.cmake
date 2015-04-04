@@ -18,6 +18,13 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
+function (CMS_MODULE_SWITCH _ret _name)
+  set (_switch "BUILD_${_name}")
+  option (${_switch} "Set true to build the bundled ${_name}." true)
+
+  CMS_RETURN(_ret \${_switch})
+endfunction ()
+
 if (CMS_SCOPE_CALL STREQUAL "INIT")
   include (CMakePackageConfigHelpers)
 
@@ -99,6 +106,11 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
     CMS_SUBMIT_PACKAGE(${_name} ${_providedTargets})
     export (PACKAGE ${_name})
   endfunction ()
+elseif (CMS_SCOPE_CALL STREQUAL "SKIP")
+  list (GET ARGN 0 _name)
+
+  # For user convenience, option entry is added regardless of skipping.
+  CMS_MODULE_SWITCH(_switch ${_name})
 elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   list (GET ARGN 0 _name)
   CMS_GET_PROPERTY(_parentType Type)
@@ -107,8 +119,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   if (_parentType STREQUAL "None")
     set (_build true)
   else ()
-    set (_switch "BUILD_${_name}")
-    set (${_switch} false CACHE BOOL "Set true to build the bundled ${_name}.")
+    CMS_MODULE_SWITCH(_switch ${_name})
 
     if (NOT ${_switch})
       CMS_USE_PACKAGE(${_name} QUIET)
