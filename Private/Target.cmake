@@ -40,6 +40,7 @@ endfunction ()
 function (CMS_DEFINE_TARGET _name)
   CMS_DEFINE_TARGET_SCOPE(${_name})
 
+  CMS_DEFINE_PROPERTY(AutoMOC)
   CMS_DEFINE_PROPERTY(Dependencies)
   CMS_DEFINE_PROPERTY(GeneratedFiles)
   CMS_DEFINE_PROPERTY(LinkFlags)
@@ -316,6 +317,7 @@ endfunction ()
 function (CMS_SUBMIT_TARGET _name)
   CMS_SUBMIT_DEPENDENCIES(${_name})
 
+  CMS_GET_PROPERTY(_autoMoc AutoMOC)
   CMS_GET_PROPERTY(_compileOptions CompileOptions)
   CMS_GET_PROPERTY(_compileDefinitions CompileDefinitions)
   CMS_GET_PROPERTY(_dependencies Dependencies)
@@ -341,6 +343,10 @@ function (CMS_SUBMIT_TARGET _name)
         "${_outputName}${_outputSuffixVersion}"
         OUTPUT_NAME_DEBUG
         "${_outputName}${_outputSuffixDebug}${_outputSuffixVersion}")
+  endif ()
+
+  if (_autoMoc)
+    set_target_properties (${_name} PROPERTIES AUTOMOC ON)
   endif ()
 
   if (_linkerLanguage)
