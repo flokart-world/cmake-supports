@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2015 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -29,15 +29,11 @@ function (CMS_QUALIFY_VARIABLE _ret _name)
 endfunction ()
 
 function (CMS_REGISTER_PACKAGE _name)
-  if (ARGN)
-    list (GET ARGN 0 _prefix)
-  else ()
-    set (_prefix "${_name}")
-  endif ()
+  CMS_ASSERT_IDENTIFIER(${_name})
 
   CMS_QUALIFY_PACKAGE_PREFIX(_qname ${_name})
   CMS_ENSURE_CMAKE_PROPERTY(GLOBAL PROPERTY ${_qname})
-  set_property (GLOBAL PROPERTY "${_qname}" "${_prefix}")
+  set_property (GLOBAL PROPERTY ${_qname} ${_name})
 endfunction ()
 
 function (CMS_GET_PACKAGE_PREFIX _ret _name)
@@ -76,6 +72,7 @@ endfunction ()
 # This function may be called more than once for a package within a same
 # scope, due to set of required components.
 function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
+  CMS_ASSERT_IDENTIFIER(${_package})
   CMS_PACKAGE_INTERFACE(_target ${_package})
 
   if (${_prefix}_LIBRARY_DIRS)
@@ -127,20 +124,24 @@ endfunction ()
 function (CMS_TEST_PACKAGE _ret _name)
   CMS_PACKAGE_INTERFACE(_target ${_name})
 
-  if (TARGET "${_target}")
+  if (TARGET ${_target})
     CMS_PACKAGE_COMPONENTS(_qname ${_target})
     get_cmake_property (_loadedComponents ${_qname})
 
-    if (_loadedComponents)
-      list (REMOVE_ITEM ARGN ${_loadedComponents})
-    endif ()
+    if (ARGN)
+      if (_loadedComponents)
+        list (REMOVE_ITEM ARGN ${_loadedComponents})
+      endif ()
 
-    list (LENGTH ARGN _length)
+      list (LENGTH ARGN _length)
 
-    if (_length EQUAL 0)
-      CMS_RETURN(_ret true)
+      if (_length EQUAL 0)
+        CMS_RETURN(_ret true)
+      else ()
+        CMS_RETURN(_ret false)
+      endif ()
     else ()
-      CMS_RETURN(_ret false)
+      CMS_RETURN(_ret true)
     endif ()
   else ()
     CMS_RETURN(_ret false)
@@ -201,7 +202,7 @@ function (CMS_LOAD_PACKAGE _name)
     find_package ("${_name}" ${ARGN})
 
     if (${_prefix}_FOUND)
-      CMS_REGISTER_PACKAGE(${_name} ${_prefix})
+      CMS_REGISTER_PACKAGE(${_name})
       CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix} ${_components})
     endif ()
   endif ()
@@ -212,9 +213,18 @@ function (CMS_PROVIDE_PACKAGE _name)
   CMS_TEST_PACKAGE(_loaded ${_name})
 
   if (NOT _loaded)
-    CMS_REGISTER_PACKAGE(${_name} ${_prefix})
-    CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix} ${ARGN})
+    CMS_REGISTER_PACKAGE(${_name})
   endif ()
+
+  CMS_PACKAGE_INTERFACE(_target ${_name})
+
+  if (NOT TARGET ${_target})
+    # A provided package corresponds to an embedded(virtual) package.
+    # It prevents non-global library from being added.
+    add_library (${_target} INTERFACE IMPORTED GLOBAL)
+  endif ()
+
+  CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_name} ${ARGN})
 endfunction ()
 
 function (CMS_TEST_VARIABLE _ret _name)
