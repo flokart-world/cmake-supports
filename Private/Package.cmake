@@ -96,9 +96,27 @@ function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
   endif ()
 
   if (${_prefix}_LIBRARIES)
+    set (_mode false)
+    unset (_libs)
+
+    foreach (_term IN LISTS ${_prefix}_LIBRARIES)
+      if (_mode)
+        if (_mode STREQUAL "optimized")
+          list (APPEND _libs "$<$<NOT:$<CONFIG:Debug>>:${_term}>")
+        else ()
+          list (APPEND _libs "$<$<CONFIG:Debug>:${_term}>")
+        endif ()
+
+        set (_mode false)
+      elseif (_term STREQUAL "optimized" OR _term STREQUAL "debug")
+        set (_mode ${_term})
+      else ()
+        list (APPEND _libs "${_term}")
+      endif ()
+    endforeach ()
+
     CMS_ADD_TO_CMAKE_TARGET_PROPERTY(${_target}
-                                     INTERFACE_LINK_LIBRARIES
-                                     ${${_prefix}_LIBRARIES})
+                                     INTERFACE_LINK_LIBRARIES ${_libs})
   endif ()
 
   CMS_PACKAGE_DOMAIN(_qname "${_target}")
