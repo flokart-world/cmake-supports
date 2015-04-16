@@ -89,10 +89,21 @@ function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
     add_library (${_target} INTERFACE IMPORTED)
   endif ()
 
+  if (${_prefix}_INCLUDE_DIR)
+    set (_includes "${${_prefix}_INCLUDE_DIR}")
+  else ()
+    unset (_includes)
+  endif ()
+
   if (${_prefix}_INCLUDE_DIRS)
+    list (APPEND _includes ${${_prefix}_INCLUDE_DIRS})
+  endif ()
+
+  if (_includes)
+    list (REMOVE_DUPLICATES _includes)
+
     CMS_ADD_TO_CMAKE_TARGET_PROPERTY(${_target}
-                                     INTERFACE_INCLUDE_DIRECTORIES
-                                     ${${_prefix}_INCLUDE_DIRS})
+        INTERFACE_INCLUDE_DIRECTORIES ${_includes})
   endif ()
 
   if (${_prefix}_LIBRARIES)
