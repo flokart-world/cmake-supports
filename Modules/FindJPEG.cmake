@@ -9,7 +9,7 @@
 
 #=============================================================================
 # Copyright 2001-2009 Kitware, Inc.
-# Copyright 2014 Flokart World, Inc.
+# Copyright 2014-2015 Flokart World, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -50,18 +50,23 @@ find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h
 
 set (JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
 set (JPEG_LIBRARY_DIR "${PC_JPEG_LIBDIR}" CACHE PATH "")
+set (_hints "${PC_JPEG_LIBDIR}/Release"
+            "${PC_JPEG_LIBDIR}/Debug"
+            ${PC_JPEG_LIBRARY_DIRS})
 
-find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES}
-              HINTS
-              "${PC_JPEG_LIBDIR}"
-              "${PC_JPEG_LIBDIR}/Release"
-              "${PC_JPEG_LIBDIR}/Debug"
-              "${PC_JPEG_LIBRARY_DIRS}")
+find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES} HINTS ${_hints})
 
-get_filename_component (JPEG_LIBRARY_NAME "${JPEG_LIBRARY}" NAME)
-set (JPEG_LIBRARIES "${PC_JPEG_LIBRARIES}")
-list (REMOVE_ITEM JPEG_LIBRARIES ${JPEG_NAMES})
-list (APPEND JPEG_LIBRARIES "${JPEG_LIBRARY_NAME}")
+set (JPEG_LIBRARIES "")
+
+foreach (_name IN LISTS PC_JPEG_LIBRARIES)
+  string (TOUPPER ${_name} _suffix)
+  find_library (JPEG_LIBRARY_${_suffix} NAMES ${_name} HINTS ${_hints})
+  mark_as_advanced (JPEG_LIBRARY_${_suffix})
+
+  list (APPEND JPEG_LIBRARIES ${JPEG_LIBRARY_${_suffix}})
+endforeach ()
+
+list (REMOVE_DUPLICATES JPEG_LIBRARIES)
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
 # all listed variables are TRUE
@@ -83,7 +88,6 @@ mark_as_advanced (JPEG_LIBRARY
                   JPEG_LIBRARY_DIR)
 
 set (JPEG_INCLUDE_DIRS "${PC_JPEG_INCLUDE_DIRS}")
-set (JPEG_LIBRARY_DIRS "${PC_JPEG_LIBRARY_DIRS}")
 
 CMS_REPLACE_MODULE_DIRS(JPEG
                         "${PC_JPEG_INCLUDEDIR}"

@@ -3,7 +3,6 @@
 #
 #  LIBXML2_FOUND - System has LibXml2
 #  LIBXML2_INCLUDE_DIRS - The LibXml2 include directories
-#  LIBXML2_LIBRARY_DIRS - The LibXml2 library directories
 #  LIBXML2_LIBRARIES - The libraries needed to use LibXml2
 #  LIBXML2_DEFINITIONS - Compiler switches required for using LibXml2
 #  LIBXML2_XMLLINT_EXECUTABLE - The XML checking tool xmllint coming with LibXml2
@@ -12,7 +11,7 @@
 #=============================================================================
 # Copyright 2006-2009 Kitware, Inc.
 # Copyright 2006 Alexander Neundorf <neundorf@kde.org>
-# Copyright 2014 Flokart World, Inc.
+# Copyright 2014-2015 Flokart World, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -45,6 +44,7 @@
 
 CMS_ASSIGN_PACKAGE(LIBXML2 libxml-2.0)
 PKG_CHECK_MODULES(PC_LIBXML QUIET libxml-2.0)
+CMS_CONVERT_PACKAGE_DEFS(LIBXML2 PC_LIBXML)
 
 set (LIBXML2_DEFINITIONS "${PC_LIBXML_CFLAGS_OTHER}")
 
@@ -53,11 +53,6 @@ find_path (LIBXML2_INCLUDE_DIR NAMES libxml/xpath.h
            "${PC_LIBXML_INCLUDEDIR}"
            "${PC_LIBXML_INCLUDE_DIRS}"
            PATH_SUFFIXES libxml2)
-
-find_library (LIBXML2_LIBRARIES NAMES xml2 libxml2
-              HINTS
-              "${PC_LIBXML_LIBDIR}"
-              "${PC_LIBXML_LIBRARY_DIRS}")
 
 find_program(LIBXML2_XMLLINT_EXECUTABLE xmllint)
 # for backwards compat. with KDE 4.0.x:
@@ -74,10 +69,6 @@ elseif(LIBXML2_INCLUDE_DIR AND EXISTS "${LIBXML2_INCLUDE_DIR}/libxml/xmlversion.
     unset(libxml2_version_str)
 endif()
 
-set (LIBXML2_LIBRARY_DIR "${PC_LIBXML_LIBDIR}" CACHE PATH "")
-list (APPEND LIBXML2_LIBRARIES ${PC_LIBXML_LIBRARIES})
-list (REMOVE_DUPLICATES LIBXML2_LIBRARIES)
-
 # handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
@@ -92,11 +83,3 @@ mark_as_advanced(LIBXML2_INCLUDE_DIR
                  LIBXML2_LIBRARY_DIR
                  LIBXML2_LIBRARIES
                  LIBXML2_XMLLINT_EXECUTABLE)
-
-set (LIBXML2_INCLUDE_DIRS "${PC_LIBXML_INCLUDE_DIRS}")
-set (LIBXML2_LIBRARY_DIRS "${PC_LIBXML_LIBRARY_DIRS}")
-
-CMS_REPLACE_MODULE_DIRS(LIBXML2
-                        "${PC_LIBXML_INCLUDEDIR}"
-                        "${PC_LIBXML_LIBDIR}")
-CMS_PROMOTE_MODULE_DEFS(LIBXML2)

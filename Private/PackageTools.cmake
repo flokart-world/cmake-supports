@@ -23,34 +23,55 @@ include (FindPackageHandleStandardArgs)
 
 macro (CMS_REPLACE_MODULE_DIRS _prefix _old_include _old_lib)
   list (REMOVE_ITEM ${_prefix}_INCLUDE_DIRS "${_old_include}")
-  list (REMOVE_ITEM ${_prefix}_LIBRARY_DIRS "${_old_lib}")
-
   list (INSERT ${_prefix}_INCLUDE_DIRS 0 "${${_prefix}_INCLUDE_DIR}")
-  list (INSERT ${_prefix}_LIBRARY_DIRS 0 "${${_prefix}_LIBRARY_DIR}")
+
+  if (${_prefix}_LIBRARY_DIRS)
+    list (REMOVE_ITEM ${_prefix}_LIBRARY_DIRS "${_old_lib}")
+    list (INSERT ${_prefix}_LIBRARY_DIRS 0 "${${_prefix}_LIBRARY_DIR}")
+  endif ()
 endmacro ()
 
 macro (CMS_PROMOTE_MODULE_DEFS _prefix)
   CMS_PROMOTE_TO_GLOBAL(${_prefix}_INCLUDE_DIRS)
-  CMS_PROMOTE_TO_GLOBAL(${_prefix}_LIBRARY_DIRS)
   CMS_PROMOTE_TO_GLOBAL(${_prefix}_LIBRARIES)
+
+  if (${_prefix}_LIBRARY_DIRS)
+    CMS_PROMOTE_TO_GLOBAL(${_prefix}_LIBRARY_DIRS)
+  endif ()
 endmacro ()
 
 function (CMS_CONVERT_PACKAGE_DEFS _prefix _pc_prefix)
   # Workaround against the issue where paths with spaces becomes lists.
   CMS_JOIN(_include " " ${${_pc_prefix}_INCLUDEDIR})
-  CMS_JOIN(_lib " " ${${_pc_prefix}_LIBDIR})
+  CMS_JOIN(_libdir " " ${${_pc_prefix}_LIBDIR})
 
   set (${_prefix}_INCLUDE_DIR "${_include}"
        CACHE PATH "Where the library headers are placed.")
-  set (${_prefix}_LIBRARY_DIR "${_lib}"
+  set (${_prefix}_LIBRARY_DIR "${_libdir}"
        CACHE PATH "Where the library binaries are placed.")
   mark_as_advanced (${_prefix}_INCLUDE_DIR
                     ${_prefix}_LIBRARY_DIR)
 
   set (${_prefix}_INCLUDE_DIRS "${${_pc_prefix}_INCLUDE_DIRS}")
-  set (${_prefix}_LIBRARY_DIRS "${${_pc_prefix}_LIBRARY_DIRS}")
-  set (${_prefix}_LIBRARIES "${${_pc_prefix}_LIBRARIES}")
-  CMS_REPLACE_MODULE_DIRS(${_prefix} "${_include}" "${_lib}")
+
+  set (_libs "${${_pc_prefix}_LIBRARIES}")
+  unset (_libFiles)
+
+  foreach (_lib IN LISTS _libs)
+    string (TOUPPER ${_lib} _suffix)
+    set (_varName "${_prefix}_LIBRARY_${_suffix}")
+
+    find_library (${_varName} NAMES "${_lib}"
+                              HINTS ${${_pc_prefix}_LIBRARY_DIRS})
+    mark_as_advanced (${_varName})
+
+    list (APPEND _libFiles ${${_varName}})
+  endforeach ()
+
+  list (REMOVE_DUPLICATES _libFiles)
+  set (${_prefix}_LIBRARIES ${_libFiles})
+
+  CMS_REPLACE_MODULE_DIRS(${_prefix} "${_include}" "${_libdir}")
   CMS_PROMOTE_MODULE_DEFS(${_prefix})
 endfunction ()
 
