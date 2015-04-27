@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2015 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -241,19 +241,11 @@ endfunction ()
 function (CMS_DISABLE_MSVC_WARNINGS)
   CMS_OPTIONS_DISABLE_MSVC_WARNINGS(_options ${ARGN})
   CMS_ADD_COMPILE_OPTIONS(PRIVATE ${_options})
-
-  # TODO : Delete them.
-  CMS_DISABLE_MSVC_WARNINGS_OLD(${ARGN})
-  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_DISABLED_MSVC_WARNINGS)
 endfunction ()
 
 function (CMS_ADD_DEFINITIONS)
   CMS_DEFAULT_SCOPED_PROPERTY(_values ${ARGN})
   CMS_APPEND_TO_PROPERTY(CompileDefinitions ${_values})
-
-  # TODO : Delete them.
-  CMS_ADD_DEFINITIONS_OLD(${ARGN})
-  CMS_PROMOTE_TO_PARENT_SCOPE(CMS_DEFINITIONS)
 endfunction ()
 
 function (CMS_EXPAND_VARIABLES _ret)

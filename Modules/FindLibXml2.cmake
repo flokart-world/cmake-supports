@@ -42,7 +42,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #=============================================================================
 
-CMS_ASSIGN_PACKAGE(LIBXML2 libxml-2.0)
 PKG_CHECK_MODULES(PC_LIBXML QUIET libxml-2.0)
 CMS_CONVERT_PACKAGE_DEFS(LIBXML2 PC_LIBXML)
 

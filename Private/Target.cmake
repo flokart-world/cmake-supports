@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2015 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -93,15 +93,6 @@ function (CMS_APPEND_TO_SOURCE_FILE_PROPERTY _file _name)
 endfunction ()
 
 function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS)
-
-  # TODO : Delete them.
-  CMS_GET_PROPERTY(_type Type)
-  if (_type STREQUAL "None")
-    CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS_OLD(${ARGN})
-    CMS_OBJMAP_PROMOTE_TO_PARENT_SCOPE(CMS_SOURCE_FLAGS)
-    return ()
-  endif ()
-
   set (_files "")
 
   while (ARGN)
@@ -127,16 +118,6 @@ function (CMS_SOURCE_FILES_DISABLE_MSVC_WARNINGS)
 endfunction ()
 
 function (CMS_ADD_SOURCE_FILES)
-
-  # TODO : Delete them.
-  CMS_GET_PROPERTY(_type Type)
-  if (_type STREQUAL "None")
-    CMS_ADD_SOURCE_FILES_OLD(${ARGN})
-    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_SOURCE_FILES)
-    CMS_OBJMAP_PROMOTE_TO_PARENT_SCOPE(CMS_SOURCE_GROUPS)
-    return ()
-  endif ()
-
   if (ARGN)
     set (_files "")
     list (GET ARGN -1 _last)
@@ -177,15 +158,6 @@ function (CMS_ADD_SOURCE_FILES)
 endfunction ()
 
 function (CMS_ADD_GENERATED_FILES)
-
-  # TODO : Delete them.
-  CMS_GET_PROPERTY(_type Type)
-  if (_type STREQUAL "None")
-    CMS_ADD_GENERATED_FILES_OLD("${ARGN}")
-    CMS_PROMOTE_TO_PARENT_SCOPE(CMS_GENERATED_FILES)
-    return ()
-  endif ()
-
   if (ARGN)
     set (_files "")
 

@@ -40,7 +40,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #=============================================================================
 
-CMS_ASSIGN_PACKAGE(JPEG libjpeg)
 PKG_CHECK_MODULES(PC_JPEG QUIET libjpeg)
 
 find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h
