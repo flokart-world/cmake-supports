@@ -255,24 +255,33 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
   if (_compileDefinitions)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
                                  ${_compileDefinitions})
-    target_compile_definitions (${_name} ${_values})
+    if (_values)
+      target_compile_definitions (${_name} ${_values})
+    endif ()
   endif ()
 
   if (_compileOptions)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
                                  ${_compileOptions})
-    target_compile_options (${_name} ${_values})
+    if (_values)
+      target_compile_options (${_name} ${_values})
+    endif ()
   endif ()
 
   if (_includeDirectories)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
                                  ${_includeDirectories})
-    target_include_directories (${_name} ${_values})
+    if (_values)
+      target_include_directories (${_name} ${_values})
+    endif ()
   endif ()
 
   if (_linkLibraries)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_linkTime} ${_linkLibraries})
-    target_link_libraries (${_name} ${_values})
+
+    if (_values)
+      target_link_libraries (${_name} ${_values})
+    endif ()
   endif ()
 
   if (_exportName)
@@ -304,38 +313,44 @@ function (CMS_SUBMIT_TARGET _name)
   CMS_GET_PROPERTY(_sourceFiles SourceFiles)
   CMS_GET_PROPERTY(_sourceGroups SourceGroups)
 
-  list (REMOVE_DUPLICATES _publicHeaderDirectories)
-
-  set_target_properties (${_name} PROPERTIES LINK_FLAGS "${_linkFlags}")
-
-  if (_outputName)
-    set_target_properties (${_name}
-        PROPERTIES
-        OUTPUT_NAME
-        "${_outputName}${_outputSuffixVersion}"
-        OUTPUT_NAME_DEBUG
-        "${_outputName}${_outputSuffixDebug}${_outputSuffixVersion}")
-  endif ()
-
-  if (_autoMoc)
-    set_target_properties (${_name} PROPERTIES AUTOMOC ON)
-  endif ()
-
-  if (_linkerLanguage)
-    set_target_properties (${_name} PROPERTIES LINK_FLAGS "${_linkerLanguage}")
-  endif ()
-
-  get_target_property (_targetType ${_name} TYPE)
-
   set (_compileTime PUBLIC)
   set (_linkTime PRIVATE)
 
-  if (_targetType STREQUAL "EXECUTABLE")
-    set (_compileTime PRIVATE)
-  endif ()
+  list (REMOVE_DUPLICATES _publicHeaderDirectories)
 
-  if (_targetType STREQUAL "STATIC_LIBRARY")
-    set (_linkTime PUBLIC)
+  if (_sourceFiles) # elsewise it is an interface library.
+    set_target_properties (${_name} PROPERTIES LINK_FLAGS "${_linkFlags}")
+
+    if (_outputName)
+      set_target_properties (${_name}
+          PROPERTIES
+          OUTPUT_NAME
+          "${_outputName}${_outputSuffixVersion}"
+          OUTPUT_NAME_DEBUG
+          "${_outputName}${_outputSuffixDebug}${_outputSuffixVersion}")
+    endif ()
+
+    if (_linkerLanguage)
+      set_target_properties (${_name}
+                             PROPERTIES LINKER_LANGUAGE "${_linkerLanguage}")
+    endif ()
+
+    if (_autoMoc)
+      set_target_properties (${_name} PROPERTIES AUTOMOC ON)
+    endif ()
+
+    get_target_property (_targetType ${_name} TYPE)
+
+    if (_targetType STREQUAL "EXECUTABLE")
+      set (_compileTime PRIVATE)
+    endif ()
+
+    if (_targetType STREQUAL "STATIC_LIBRARY")
+      set (_linkTime PUBLIC)
+    endif ()
+  else ()
+    set (_compileTime INTERFACE)
+    set (_linkTime INTERFACE)
   endif ()
 
   CMS_SUBMIT_TARGET_SCOPE(${_name} ${_compileTime} ${_linkTime})

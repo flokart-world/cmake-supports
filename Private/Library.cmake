@@ -26,7 +26,15 @@ endfunction ()
 function (CMS_SUBMIT_LIBRARY _name)
   message (STATUS "Emitting the library ${_name}.")
 
+  CMS_GET_PROPERTY(_sourceFiles SourceFiles)
   CMS_PREPARE_TARGET(_files)
-  add_library (${_name} ${_files})
+
+  if (_sourceFiles)
+    add_library (${_name} ${_files})
+  else ()
+    add_library (${_name} INTERFACE)
+    add_custom_target (${_name}-header_only SOURCES ${_files})
+  endif ()
+
   CMS_SUBMIT_TARGET(${_name})
 endfunction ()
