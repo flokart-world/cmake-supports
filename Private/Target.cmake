@@ -384,7 +384,11 @@ function (CMS_SUBMIT_TARGET _name)
       CMS_GET_PROPERTY(_values "${_prefix}CompileOptions")
 
       if (_values)
-        CMS_JOIN(_values " " ${_values} "/wd%(DisableSpecificWarnings)")
+        if (MSVC)
+          CMS_JOIN(_values " " ${_values} "/wd%(DisableSpecificWarnings)")
+        else ()
+          CMS_JOIN(_values " " ${_values})
+        endif ()
         set_source_files_properties (${_source} PROPERTIES
                                      COMPILE_FLAGS ${_values})
       endif ()
