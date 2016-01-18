@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2016 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -25,28 +25,32 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
 
   message (STATUS "Entering the C++ library ${_name}.")
 
-  if (WIN32)
-    set (_prefix "lib")
-  else ()
-    set (_prefix "")
-  endif ()
-
-  string (REGEX REPLACE "^lib" "" _coreName "${_name}")
-  set (_outputName "${_prefix}${_coreName}${CMS_TOOLSET_SUFFIX_CXX}")
-
-  if (WIN32)
-    set (_outputName "${_outputName}-mt")
-  endif ()
-
   CMS_DEFINE_LIBRARY("${_name}")
   CMS_SET_PROPERTY(LinkerLanguage CXX)
-  CMS_SET_PROPERTY(OutputName "${_outputName}")
   CMS_SET_PROPERTY(OutputSuffixDebug -gd)
 
   CMS_STACK_PUSH("${_name}")
 elseif (CMS_SCOPE_CALL STREQUAL "END")
   CMS_STACK_POP(_name)
+  CMS_GET_PROPERTY(_outputName OutputName)
   CMS_GET_PROPERTY(_version Version)
+
+  if (NOT _outputName)
+    string (REGEX REPLACE "^lib" "" _coreName "${_name}")
+    set (_outputName "${_coreName}${CMS_TOOLSET_SUFFIX_CXX}")
+
+    if (WIN32)
+      CMS_GET_PROPERTY(_link Link)
+
+      if (NOT _link MATCHES "^(SHARED|MODULE)$")
+        set (_outputName "lib${_outputName}")
+      endif ()
+
+      set (_outputName "${_outputName}-mt")
+    endif ()
+
+    CMS_SET_PROPERTY(OutputName "${_outputName}")
+  endif ()
 
   string (REGEX REPLACE "^((\\d+)(\\.\\d+)?).*$" "\\1" _suffix "${_version}")
   string (REPLACE "." "_" _suffix "${_suffix}")

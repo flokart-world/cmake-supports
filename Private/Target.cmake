@@ -345,7 +345,7 @@ function (CMS_SUBMIT_TARGET _name)
       set (_compileTime PRIVATE)
     endif ()
 
-    if (_targetType STREQUAL "STATIC_LIBRARY")
+    if (_targetType MATCHES "_LIBRARY$")
       set (_linkTime PUBLIC)
     endif ()
   else ()
