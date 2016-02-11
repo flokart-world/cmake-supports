@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015 Flokart World, Inc.
+# Copyright (c) 2014-2016 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -103,6 +103,20 @@ function (CMS_REINIT_CACHE _name)
   endif ()
 
   set_property (CACHE CMS_MODIFIED APPEND PROPERTY VALUE "${_name}")
+endfunction ()
+
+function (CMS_WRITE_FILE _filename)
+  CMS_JOIN(_newContent "" ${ARGN})
+
+  if (EXISTS "${_filename}")
+    file (READ "${_filename}" _oldContent)
+
+    if (_newContent STREQUAL _oldContent)
+      return ()
+    endif ()
+  endif ()
+
+  file (WRITE "${_filename}" "${_newContent}")
 endfunction ()
 
 # Here starts the global initialization.
