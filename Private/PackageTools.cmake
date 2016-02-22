@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015 Flokart World, Inc.
+# Copyright (c) 2014-2016 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -68,7 +68,10 @@ function (CMS_CONVERT_PACKAGE_DEFS _prefix _pc_prefix)
     list (APPEND _libFiles ${${_varName}})
   endforeach ()
 
-  list (REMOVE_DUPLICATES _libFiles)
+  if (_libFiles)
+    list (REMOVE_DUPLICATES _libFiles)
+  endif ()
+
   set (${_prefix}_LIBRARIES ${_libFiles})
 
   CMS_REPLACE_MODULE_DIRS(${_prefix} "${_include}" "${_libdir}")
