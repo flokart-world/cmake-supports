@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2016 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
     CMS_GET_PROPERTY(_commandLine CommandLine)
     CMS_GET_PROPERTY(_includeWithinAll IncludeWithinAll)
     CMS_GET_PROPERTY(_workingDirectory WorkingDirectory)
+    CMS_GET_PROPERTY(_connectTerminal ConnectTerminal)
     CMS_PREPARE_TARGET(_files)
 
     if (_includeWithinAll)
@@ -43,6 +44,10 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
       list (APPEND _options VERBATIM)
     endif ()
 
+    if (_connectTerminal)
+      list (APPEND _options USES_TERMINAL)
+    endif ()
+
     if (_files)
       list (APPEND _options SOURCES ${_files})
     endif ()
@@ -58,6 +63,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   CMS_INHERIT_PROPERTY(ExportName)
 
   CMS_DEFINE_PROPERTY(CommandLine)
+  CMS_DEFINE_PROPERTY(ConnectTerminal)
   CMS_DEFINE_PROPERTY(IncludeWithinAll)
   CMS_DEFINE_PROPERTY(WorkingDirectory)
 
