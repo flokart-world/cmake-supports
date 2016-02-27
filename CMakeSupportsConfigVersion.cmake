@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015 Flokart World, Inc.
+# Copyright (c) 2014-2016 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -18,7 +18,7 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-set (PACKAGE_VERSION 0.0.5)
+set (PACKAGE_VERSION 0.0.6)
 
 if (PACKAGE_FIND_VERSION)
   # The syntax style to 0.0.3 is no longer supported.
