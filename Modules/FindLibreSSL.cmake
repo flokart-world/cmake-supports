@@ -28,7 +28,7 @@ find_path (LibreSSL_INCLUDE_DIR NAMES tls.h
 
 set (LibreSSL_LIBRARY_DIR "${PC_LIBRESSL_LIBDIR}"
      CACHE PATH "LibreSSL library directory")
-set (_hints "${PC_LIBRESSL_LIBDIR}"
+set (_hints "${LibreSSL_LIBRARY_DIR}"
             "${PC_LIBRESSL_LIBRARY_DIRS}")
 
 set (LibreSSL_LIBRARIES "")
