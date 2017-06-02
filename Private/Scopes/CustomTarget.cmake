@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016 Flokart World, Inc.
+# Copyright (c) 2014-2017 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
 
     set (_options "")
     CMS_GET_PROPERTY(_commandLine CommandLine)
+    CMS_GET_PROPERTY(_dependencies Dependencies)
     CMS_GET_PROPERTY(_includeWithinAll IncludeWithinAll)
     CMS_GET_PROPERTY(_workingDirectory WorkingDirectory)
     CMS_GET_PROPERTY(_connectTerminal ConnectTerminal)
@@ -35,6 +36,25 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
 
     if (_commandLine)
       list (APPEND _options COMMAND ${_commandLine})
+
+      set (_dependencyFiles)
+      set (_dependencyTargets)
+
+      if (_dependencies)
+        foreach (_item IN LISTS _dependencies)
+          if (TARGET ${_item})
+            list (APPEND _dependencyTargets ${_item})
+          else ()
+            list (APPEND _dependencyFiles ${_item})
+          endif ()
+        endforeach ()
+
+        CMS_SET_PROPERTY(Dependencies ${_dependencyTargets})
+      endif ()
+
+      if (_dependencyFiles)
+        list (APPEND _options DEPENDS ${_dependencyFiles})
+      endif ()
 
       if (_workingDirectory)
         CMS_ASSERT_IDENTIFIER(${_workingDirectory})
