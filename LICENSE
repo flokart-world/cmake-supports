@@ -1,3 +1,14 @@
+The following files are derived from the CMake project:
+
+  Modules/FindCygwin.cmake
+  Modules/FindJPEG.cmake
+  Modules/FindLibXml2.cmake
+  Private/SetToolsetSuffixCxx.cmake
+
+See the beginning of each file for the license.
+
+The rest of this project are distributed under the following terms:
+===============================================================================
 Copyright (c) 2014-2017 Flokart World, Inc.
 Copyright (c) 2016 BPS Co., Ltd.
 
@@ -18,3 +29,4 @@ freely, subject to the following restrictions:
    misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source distribution.
+===============================================================================
