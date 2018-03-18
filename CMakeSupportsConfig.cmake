@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016 Flokart World, Inc.
+# Copyright (c) 2014-2018 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -18,7 +18,7 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required (VERSION 3.0.0)
+cmake_minimum_required (VERSION 3.7.2)
 
 macro (CMS_RETURN _var)
   set ("${${_var}}" "${ARGN}" PARENT_SCOPE)
@@ -143,7 +143,7 @@ function (CMS_INIT_GLOBAL)
 
     CMS_WARN_UNSET_ENV("PKG_CONFIG_PATH")
 
-    if (CMS_INSTALL_PREFIX)
+    if (CMS_INSTALL_PREFIX AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
       CMS_REINIT_CACHE(CMAKE_INSTALL_PREFIX
                        "${CMS_INSTALL_PREFIX}/${CMAKE_PROJECT_NAME}")
     endif ()
