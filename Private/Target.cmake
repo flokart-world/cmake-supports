@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016 Flokart World, Inc.
+# Copyright (c) 2014-2018 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -31,6 +31,7 @@ function (CMS_DEFINE_TARGET_SCOPE _name)
   CMS_DEFINE_NAMESPACE(${_name})
 
   CMS_INHERIT_PROPERTY(CompileDefinitions)
+  CMS_INHERIT_PROPERTY(CompileFeatures)
   CMS_INHERIT_PROPERTY(CompileOptions)
   CMS_INHERIT_PROPERTY(IncludeDirectories)
   CMS_INHERIT_PROPERTY(LinkDirectories)
@@ -248,6 +249,7 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
   CMS_ASSERT_IDENTIFIER(${_linkTime})
 
   CMS_GET_PROPERTY(_compileDefinitions CompileDefinitions)
+  CMS_GET_PROPERTY(_compileFeatures CompileFeatures)
   CMS_GET_PROPERTY(_compileOptions CompileOptions)
   CMS_GET_PROPERTY(_exportName ExportName)
   CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
@@ -258,6 +260,14 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
                                  ${_compileDefinitions})
     if (_values)
       target_compile_definitions (${_name} ${_values})
+    endif ()
+  endif ()
+
+  if (_compileFeatures)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
+                                 ${_compileFeatures})
+    if (_values)
+      target_compile_features (${_name} ${_values})
     endif ()
   endif ()
 
@@ -300,8 +310,6 @@ function (CMS_SUBMIT_TARGET _name)
   CMS_SUBMIT_DEPENDENCIES(${_name})
 
   CMS_GET_PROPERTY(_autoMoc AutoMOC)
-  CMS_GET_PROPERTY(_compileOptions CompileOptions)
-  CMS_GET_PROPERTY(_compileDefinitions CompileDefinitions)
   CMS_GET_PROPERTY(_dependencies Dependencies)
   CMS_GET_PROPERTY(_generatedFiles GeneratedFiles)
   CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
