@@ -191,7 +191,7 @@ if (NOT CMS_MEMORY_INITIALIZED)
 endif ()
 
 set (CMAKE_WARN_DEPRECATED true)
-find_package (PkgConfig REQUIRED)
+find_package (PkgConfig)
 
 CMS_INIT_GLOBAL()
 CMS_INIT_DIRECTORY()
