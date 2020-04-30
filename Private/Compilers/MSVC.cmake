@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2020 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -18,9 +18,17 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
+set (_ltoCompiler $<$<NOT:$<CONFIG:Debug>>:/GL>)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  # Not supported.
+  set (_ltoCompiler)
+endif ()
+
 set_property (GLOBAL PROPERTY CMS::DefaultCompilerOptions
     $<$<CONFIG:MinSizeRel>:/Os>
     $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/Oi /Ot>
     $<$<OR:$<CONFIG:MinSizeRel>,$<CONFIG:Release>>:/Oy>
-    $<$<NOT:$<CONFIG:Debug>>:/GL /GS->
-    /W4 /EHa /fp:fast)
+    $<$<NOT:$<CONFIG:Debug>>:/GS->
+    /W4 /fp:fast
+    ${_ltoCompiler})
