@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018 Flokart World, Inc.
+# Copyright (c) 2014-2020 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -36,6 +36,7 @@ function (CMS_DEFINE_TARGET_SCOPE _name)
   CMS_INHERIT_PROPERTY(IncludeDirectories)
   CMS_INHERIT_PROPERTY(LinkDirectories)
   CMS_INHERIT_PROPERTY(LinkLibraries)
+  CMS_INHERIT_PROPERTY(LinkOptions)
 endfunction ()
 
 function (CMS_DEFINE_TARGET _name)
@@ -51,6 +52,7 @@ function (CMS_DEFINE_TARGET _name)
   CMS_DEFINE_PROPERTY(OutputSuffixDebug)
   CMS_DEFINE_PROPERTY(OutputSuffixVersion)
   CMS_DEFINE_PROPERTY(SourceFiles)
+  CMS_DEFINE_PROPERTY(StaticLibraryOptions)
 
   CMS_INHERIT_PROPERTY(PublicHeaders)
   CMS_INHERIT_PROPERTY(PublicHeaderDirectories)
@@ -75,12 +77,6 @@ function (CMS_DEFINE_TARGET _name)
     CMS_DEFINE_PROPERTY(${_name})
     CMS_INHERIT_PROPERTY(${_name})
   endforeach ()
-
-  get_property (_defaultOptions GLOBAL PROPERTY CMS::DefaultCompilerOptions)
-
-  if (_defaultOptions)
-    CMS_APPEND_TO_PROPERTY(CompileOptions PRIVATE ${_defaultOptions})
-  endif ()
 endfunction ()
 
 function (CMS_DEFINE_SOURCE_FILE_PROPERTIES _fullPath)
@@ -295,6 +291,16 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
     endif ()
   endif ()
 
+  CMS_GET_PROPERTY(_linkOptions LinkOptions)
+
+  if (_linkOptions)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values ${_linkTime} ${_linkOptions})
+
+    if (_values)
+      target_link_options (${_name} ${_values})
+    endif ()
+  endif ()
+
   if (_exportName)
     install (TARGETS "${_name}"
              EXPORT "${_exportName}"
@@ -322,14 +328,22 @@ function (CMS_SUBMIT_TARGET _name)
   CMS_GET_PROPERTY(_publicHeaderDirectories PublicHeaderDirectories)
   CMS_GET_PROPERTY(_sourceFiles SourceFiles)
   CMS_GET_PROPERTY(_sourceGroups SourceGroups)
+  CMS_GET_PROPERTY(_staticLibraryOptions StaticLibraryOptions)
 
   set (_compileTime PUBLIC)
   set (_linkTime PRIVATE)
 
   list (REMOVE_DUPLICATES _publicHeaderDirectories)
 
+  if (_linkFlags AND CMakeSupports_FIND_VERSION VERSION_GREATER_EQUAL 0.0.7)
+    message (WARNING "LinkFlags property is deprecated."
+                     " Use CMS_ADD_LINK_OPTIONS function instead.")
+  endif ()
+
   if (_sourceFiles) # elsewise it is an interface library.
-    set_target_properties (${_name} PROPERTIES LINK_FLAGS "${_linkFlags}")
+    set_target_properties (${_name}
+        PROPERTIES LINK_FLAGS "${_linkFlags}"
+                   STATIC_LIBRARY_OPTIONS "${_staticLibraryOptions}")
 
     if (_outputName)
       set_target_properties (${_name}
@@ -398,13 +412,8 @@ function (CMS_SUBMIT_TARGET _name)
       CMS_GET_PROPERTY(_values "${_prefix}CompileOptions")
 
       if (_values)
-        if (MSVC)
-          CMS_JOIN(_values " " ${_values} "/wd%(DisableSpecificWarnings)")
-        else ()
-          CMS_JOIN(_values " " ${_values})
-        endif ()
         set_source_files_properties (${_source} PROPERTIES
-                                     COMPILE_FLAGS ${_values})
+                                     COMPILE_OPTIONS "${_values}")
       endif ()
     endforeach ()
   endif ()

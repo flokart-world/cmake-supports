@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2020 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -18,7 +18,6 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-CMS_DEFINE_CMAKE_PROPERTY(GLOBAL PROPERTY CMS::DefaultCompilerOptions)
 
 if (MSVC)
   include ("${CMAKE_CURRENT_LIST_DIR}/Compilers/MSVC.cmake")

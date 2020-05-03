@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018 Flokart World, Inc.
+# Copyright (c) 2014-2020 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -155,6 +155,7 @@ function (CMS_DEFINE_COMMON_PROPERTIES)
   CMS_DEFINE_PROPERTY(IncludeDirectories)
   CMS_DEFINE_PROPERTY(LinkDirectories)
   CMS_DEFINE_PROPERTY(LinkLibraries)
+  CMS_DEFINE_PROPERTY(LinkOptions)
   CMS_DEFINE_PROPERTY(Parent)
   CMS_DEFINE_PROPERTY(Prefix)
   CMS_DEFINE_PROPERTY(ProvidedPackages)
@@ -232,6 +233,11 @@ endfunction ()
 function (CMS_ADD_COMPILE_OPTIONS)
   CMS_DEFAULT_SCOPED_PROPERTY(_values ${ARGN})
   CMS_APPEND_TO_PROPERTY(CompileOptions ${_values})
+endfunction ()
+
+function (CMS_ADD_LINK_OPTIONS)
+  CMS_DEFAULT_SCOPED_PROPERTY(_values ${ARGN})
+  CMS_APPEND_TO_PROPERTY(LinkOptions ${_values})
 endfunction ()
 
 function (CMS_OPTIONS_DISABLE_MSVC_WARNINGS _ret)

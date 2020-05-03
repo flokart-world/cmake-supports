@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2020 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -57,7 +57,7 @@ function (CMS_SUBMIT_EXECUTABLE _name)
     endif ()
 
     if (_entryPoint)
-      CMS_APPEND_TO_PROPERTY(LinkFlags "/ENTRY:${_entryPoint}")
+      CMS_ADD_LINK_OPTIONS(PRIVATE "/ENTRY:${_entryPoint}")
     endif ()
   endif ()
 
