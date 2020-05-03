@@ -1,7 +1,7 @@
 # cf. https://cmake.org/licensing/
 #=============================================================================
 # Copyright 2000-2018 Kitware, Inc. and Contributors
-# Copyright 2014-2018 Flokart World, Inc.
+# Copyright 2014-2020 Flokart World, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -52,9 +52,11 @@ function(_Boost_GUESS_COMPILER_PREFIX _ret)
   elseif (GHSMULTI)
     set(_boost_COMPILER "-ghs")
   elseif("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xMSVC")
-    if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.10)
+    if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.20)
+      set(_boost_COMPILER "-vc142")
+    elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.10)
       set(_boost_COMPILER "-vc141")
-    elseif (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19)
+    elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19)
       set(_boost_COMPILER "-vc140")
     elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
       set(_boost_COMPILER "-vc120")
