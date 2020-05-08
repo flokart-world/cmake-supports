@@ -149,6 +149,7 @@ function (CMS_INIT_GLOBAL)
     endif ()
 
     CMS_DEFINE_CMAKE_PROPERTY(DIRECTORY PROPERTY CMS::Initialized INHERITED)
+    CMS_DEFINE_CMAKE_PROPERTY(DIRECTORY PROPERTY CMS::FindVersion INHERITED)
   endif ()
 endfunction ()
 
@@ -166,6 +167,9 @@ function (CMS_INIT_DIRECTORY)
     add_library (CMSVariables UNKNOWN IMPORTED)
     set_directory_properties (PROPERTIES CMS::Initialized true)
   endif ()
+
+  set_directory_properties (PROPERTIES
+                            CMS::FindVersion ${CMakeSupports_FIND_VERSION})
 endfunction ()
 
 set (CMS_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")

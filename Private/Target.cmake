@@ -318,7 +318,6 @@ function (CMS_SUBMIT_TARGET _name)
   CMS_GET_PROPERTY(_autoMoc AutoMOC)
   CMS_GET_PROPERTY(_dependencies Dependencies)
   CMS_GET_PROPERTY(_generatedFiles GeneratedFiles)
-  CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
   CMS_GET_PROPERTY(_linkFlags LinkFlags)
   CMS_GET_PROPERTY(_linkerLanguage LinkerLanguage)
   CMS_GET_PROPERTY(_outputName OutputName)
@@ -332,10 +331,11 @@ function (CMS_SUBMIT_TARGET _name)
 
   set (_compileTime PUBLIC)
   set (_linkTime PRIVATE)
+  get_directory_property (_findVersion CMS::FindVersion)
 
   list (REMOVE_DUPLICATES _publicHeaderDirectories)
 
-  if (_linkFlags AND CMakeSupports_FIND_VERSION VERSION_GREATER_EQUAL 0.0.7)
+  if (_linkFlags AND _findVersion VERSION_GREATER_EQUAL 0.0.7)
     message (WARNING "LinkFlags property is deprecated."
                      " Use CMS_ADD_LINK_OPTIONS function instead.")
   endif ()
