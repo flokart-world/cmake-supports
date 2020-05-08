@@ -37,6 +37,7 @@ function (CMS_DEFINE_TARGET_SCOPE _name)
   CMS_INHERIT_PROPERTY(LinkDirectories)
   CMS_INHERIT_PROPERTY(LinkLibraries)
   CMS_INHERIT_PROPERTY(LinkOptions)
+  CMS_INHERIT_PROPERTY(PrecompileHeaders)
 endfunction ()
 
 function (CMS_DEFINE_TARGET _name)
@@ -250,6 +251,8 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
   CMS_GET_PROPERTY(_exportName ExportName)
   CMS_GET_PROPERTY(_includeDirectories IncludeDirectories)
   CMS_GET_PROPERTY(_linkLibraries LinkLibraries)
+  CMS_GET_PROPERTY(_linkOptions LinkOptions)
+  CMS_GET_PROPERTY(_precompileHeaders PrecompileHeaders)
 
   if (_compileDefinitions)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
@@ -291,13 +294,19 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
     endif ()
   endif ()
 
-  CMS_GET_PROPERTY(_linkOptions LinkOptions)
-
   if (_linkOptions)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_linkTime} ${_linkOptions})
 
     if (_values)
       target_link_options (${_name} ${_values})
+    endif ()
+  endif ()
+
+  if (_precompileHeaders AND CMS_ENABLE_PRECOMPILE_HEADERS)
+    CMS_COMPLETE_SCOPED_PROPERTY(_values PRIVATE ${_precompileHeaders})
+
+    if (_values)
+      target_precompile_headers (${_name} ${_values})
     endif ()
   endif ()
 
@@ -412,8 +421,10 @@ function (CMS_SUBMIT_TARGET _name)
       CMS_GET_PROPERTY(_values "${_prefix}CompileOptions")
 
       if (_values)
+        # The trailing semi-colon is workaround against the issue below:
+        #   https://gitlab.kitware.com/cmake/cmake/issues/20456
         set_source_files_properties (${_source} PROPERTIES
-                                     COMPILE_OPTIONS "${_values}")
+                                     COMPILE_OPTIONS "${_values};")
       endif ()
     endforeach ()
   endif ()
@@ -425,3 +436,9 @@ function (CMS_SUBMIT_TARGET _name)
     endforeach ()
   endif ()
 endfunction ()
+
+string (JOIN " " _msg "Whether to enable precompiled headers."
+                      "Using precompiled headers improve compilation speed,"
+                      "but may drop some missing includes.")
+set (CMS_ENABLE_PRECOMPILE_HEADERS true CACHE BOOL ${_msg})
+mark_as_advanced (CMS_ENABLE_PRECOMPILE_HEADERS)

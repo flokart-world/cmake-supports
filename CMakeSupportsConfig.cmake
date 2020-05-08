@@ -18,7 +18,7 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required (VERSION 3.13.5)
+cmake_minimum_required (VERSION 3.16.6)
 
 macro (CMS_RETURN _var)
   set ("${${_var}}" "${ARGN}" PARENT_SCOPE)
