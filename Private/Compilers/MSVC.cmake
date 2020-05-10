@@ -44,11 +44,11 @@ foreach (_lang CXX C)
   CMS_REINIT_CACHE(${_base} ${_flags})
 
   CMS_REINIT_CACHE(${_base}_MINSIZEREL
-                   "${${_base}_MINSIZEREL} /Os /Oy /GS- ${_lto}")
+                   "${${_base}_MINSIZEREL} /GS- ${_lto}")
   CMS_REINIT_CACHE(${_base}_RELEASE
-                   "${${_base}_RELEASE} /Oi /Ot /Oy /GS- ${_lto}")
+                   "${${_base}_RELEASE} /GS- ${_lto}")
   CMS_REINIT_CACHE(${_base}_RELWITHDEBINFO
-                   "${${_base}_RELWITHDEBINFO} /Oi /Ot /GS- ${_lto}")
+                   "${${_base}_RELWITHDEBINFO} /GS- ${_lto}")
 endforeach ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
