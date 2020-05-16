@@ -3,19 +3,19 @@
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
 # arising from the use of this software.
-# 
+#
 # Permission is granted to anyone to use this software for any purpose,
 # including commercial applications, and to alter it and redistribute it
 # freely, subject to the following restrictions:
-# 
+#
 #    1. The origin of this software must not be misrepresented; you must not
 #    claim that you wrote the original software. If you use this software
 #    in a product, an acknowledgment in the product documentation would be
 #    appreciated but is not required.
-# 
+#
 #    2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
-# 
+#
 #    3. This notice may not be removed or altered from any source distribution.
 
 function (CMS_DEFINE_TARGET_SCOPE _name)
@@ -61,6 +61,12 @@ function (CMS_DEFINE_TARGET _name)
   CMS_INHERIT_PROPERTY(SourceGroups)
   CMS_INHERIT_PROPERTY(Version)
 
+  if (MSVC AND CMS_MSVC_WARNING_STYLE STREQUAL "NEW")
+    CMS_INHERIT_PROPERTY(MSVCFloatingPoint)
+    CMS_INHERIT_PROPERTY(MSVCPermissive)
+    CMS_INHERIT_PROPERTY(MSVCWarningLevel)
+  endif ()
+
   CMS_GET_PROPERTY(_requiredPackages RequiredPackages)
   CMS_GET_PROPERTY(_groups SourceGroups)
 
@@ -84,6 +90,11 @@ function (CMS_DEFINE_SOURCE_FILE_PROPERTIES _fullPath)
   set (_prefix "SourceFile[${_fullPath}]::")
   CMS_DEFINE_PROPERTY("${_prefix}CompileDefinitions")
   CMS_DEFINE_PROPERTY("${_prefix}CompileOptions")
+
+  # We don't define MSVCWarningLevel, MSVCPermissive and MSVCFloatingPoint
+  # here since they must be consistent across precompile headers and source
+  # files. Unless something to separate option space is provided by CMake,
+  # we leave it as a restriction.
 endfunction ()
 
 function (CMS_APPEND_TO_SOURCE_FILE_PROPERTY _file _name)
@@ -240,6 +251,11 @@ function (CMS_SUBMIT_DEPENDENCIES _name)
   endif ()
 endfunction ()
 
+function (_CMS_FALLBACK_VALUE_EXPR _ret _specified _default)
+  set (_value "$<IF:$<STREQUAL:${_specified},>,${_default},${_specified}>")
+  CMS_RETURN(_ret [[${_value}]])
+endfunction ()
+
 function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
   CMS_ASSERT_IDENTIFIER(${_name})
   CMS_ASSERT_IDENTIFIER(${_compileTime})
@@ -254,6 +270,8 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
   CMS_GET_PROPERTY(_linkOptions LinkOptions)
   CMS_GET_PROPERTY(_precompileHeaders PrecompileHeaders)
 
+  CMS_DEFAULT_COMPILE_OPTIONS(_defaultCompileOptions)
+
   if (_compileDefinitions)
     CMS_COMPLETE_SCOPED_PROPERTY(_values ${_compileTime}
                                  ${_compileDefinitions})
@@ -267,6 +285,45 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
                                  ${_compileFeatures})
     if (_values)
       target_compile_features (${_name} ${_values})
+    endif ()
+  endif ()
+
+  if (NOT _compileTime STREQUAL "INTERFACE")
+    if (_defaultCompileOptions)
+      target_compile_options (${_name} PRIVATE ${_defaultCompileOptions})
+    endif ()
+
+    if (MSVC AND CMS_MSVC_WARNING_STYLE STREQUAL "NEW")
+      CMS_GET_PROPERTY(_targetFloatingPoint "MSVCFloatingPoint")
+      CMS_GET_PROPERTY(_targetPermissive "MSVCPermissive")
+      CMS_GET_PROPERTY(_targetWarningLevel "MSVCWarningLevel")
+
+      set (_defaultFloatingPoint fast)
+      set (_defaultPermissive false)
+      set (_defaultWarningLevel 4)
+
+      if (_findVersion VERSION_LESS 0.0.7)
+        set (_defaultPermissive true)
+      endif ()
+
+      foreach (_property IN ITEMS FloatingPoint Permissive WarningLevel)
+        _CMS_FALLBACK_VALUE_EXPR(_actual${_property} "${_target${_property}}"
+                                                     "${_default${_property}}")
+      endforeach ()
+
+      set (_optFloatingPoint
+           "/fp:${_actualFloatingPoint}")
+      set (_optPermissive
+           "/permissive$<$<NOT:$<BOOL:${_actualPermissive}>>:->")
+      set (_optWarningLevel
+           "/W${_actualWarningLevel}")
+
+      set (_values)
+      foreach (_property IN ITEMS FloatingPoint Permissive WarningLevel)
+        list (APPEND _values "$<${_isCOrCxx}:${_opt${_property}}>")
+      endforeach ()
+
+      target_compile_options (${_name} PRIVATE ${_values})
     endif ()
   endif ()
 
@@ -340,6 +397,7 @@ function (CMS_SUBMIT_TARGET _name)
 
   set (_compileTime PUBLIC)
   set (_linkTime PRIVATE)
+  set (_isCOrCxx "$<COMPILE_LANGUAGE:C,CXX>")
   get_directory_property (_findVersion CMS::FindVersion)
 
   list (REMOVE_DUPLICATES _publicHeaderDirectories)

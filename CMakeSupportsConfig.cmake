@@ -3,20 +3,24 @@
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
 # arising from the use of this software.
-# 
+#
 # Permission is granted to anyone to use this software for any purpose,
 # including commercial applications, and to alter it and redistribute it
 # freely, subject to the following restrictions:
-# 
+#
 #    1. The origin of this software must not be misrepresented; you must not
 #    claim that you wrote the original software. If you use this software
 #    in a product, an acknowledgment in the product documentation would be
 #    appreciated but is not required.
-# 
+#
 #    2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
-# 
+#
 #    3. This notice may not be removed or altered from any source distribution.
+
+if (NOT DEFINED CMS_MSVC_WARNING_STYLE)
+  cmake_policy (GET CMP0092 CMS_MSVC_WARNING_STYLE)
+endif ()
 
 cmake_minimum_required (VERSION 3.16.6)
 
@@ -130,7 +134,6 @@ function (CMS_INIT_GLOBAL)
          CACHE STRING "Cache variables that have been modified by CMS.")
     mark_as_advanced (CMS_MODIFIED)
 
-    include ("${CMS_PRIVATE_DIR}/Compiler.cmake")
     include ("${CMS_PRIVATE_DIR}/Configuration.cmake")
     include ("${CMS_PRIVATE_DIR}/Executable.cmake")
     include ("${CMS_PRIVATE_DIR}/Library.cmake")
@@ -180,6 +183,8 @@ set (CMS_MODULE_DIR "${CMS_INSTALL_DIR}/Modules")
 if (NOT CMS_GLOBAL_LIST_FILE)
   set (CMS_GLOBAL_LIST_FILE "$ENV{CMS_GLOBAL_LIST_FILE}")
 endif ()
+
+include ("${CMS_PRIVATE_DIR}/Compiler.cmake")
 
 if (CMS_GLOBAL_LIST_FILE)
   include ("${CMS_GLOBAL_LIST_FILE}")
