@@ -97,6 +97,18 @@ function (CMS_DEFINE_SOURCE_FILE_PROPERTIES _fullPath)
   # we leave it as a restriction.
 endfunction ()
 
+function (CMS_ESCAPE_KEYWORDS _ret _keywords)
+  string (JOIN "|" _joined ${_keywords})
+  set (_values)
+  while (ARGN)
+    list (GET ARGN 0 _arg)
+    list (REMOVE_AT ARGN 0)
+    string (REGEX REPLACE "^(${_joined})$" [[$<1:\1>]] _arg "${_arg}")
+    list (APPEND _values "${_arg}")
+  endwhile ()
+  CMS_RETURN(_ret [[${_values}]])
+endfunction ()
+
 function (CMS_APPEND_TO_SOURCE_FILE_PROPERTY _file _name)
   get_filename_component (_fullPath "${_file}" ABSOLUTE)
   CMS_APPEND_TO_PROPERTY("SourceFile[${_fullPath}]::${_name}" ${ARGN})
@@ -184,6 +196,22 @@ function (CMS_ADD_GENERATED_FILES)
   else ()
     message (FATAL_ERROR "No files are specified.")
   endif ()
+endfunction ()
+
+function (CMS_ADD_COMMAND _cmd)
+  string (REPLACE ";" "$<SEMICOLON>" _cmd "${_cmd}")
+  set (_keywords COMMAND
+                 DEPENDS
+                 BYPRODUCTS
+                 WORKING_DIRECTORY
+                 COMMENT
+                 JOB_POOL
+                 VERBATIM
+                 USES_TERMINAL
+                 COMMAND_EXPAND_LISTS
+                 SOURCES)
+  CMS_ESCAPE_KEYWORDS(_commandLine "${_keywords}" "${_cmd}" ${ARGN})
+  CMS_APPEND_TO_PROPERTY(Commands COMMAND "${_commandLine}")
 endfunction ()
 
 function (CMS_ENSURE_PACKAGES)
