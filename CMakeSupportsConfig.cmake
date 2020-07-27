@@ -174,7 +174,7 @@ function (CMS_INIT_DIRECTORY)
   endif ()
 
   set_directory_properties (PROPERTIES
-                            CMS::FindVersion ${CMakeSupports_FIND_VERSION})
+                            CMS::FindVersion "${CMakeSupports_FIND_VERSION}")
 endfunction ()
 
 set (CMS_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
