@@ -1,0 +1,2 @@
+#!/bin/sh
+cmake -P "`dirname $0`/../share/cmake-code/cmake-code.cmake" -- "$@"
