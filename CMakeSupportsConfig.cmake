@@ -183,22 +183,26 @@ set (CMS_INSTALL_DIR "${CMS_BASE_DIR}/Installed")
 set (CMS_MODULE_DIR "${CMS_INSTALL_DIR}/Modules")
 set (CMS_PYLIB_DIR "${CMS_BASE_DIR}/Tools/pylib")
 
+if (NOT CMAKE_SCRIPT_MODE_FILE)
+  include ("${CMS_PRIVATE_DIR}/Compiler.cmake")
+endif ()
+
 if (NOT CMS_GLOBAL_LIST_FILE)
   set (CMS_GLOBAL_LIST_FILE "$ENV{CMS_GLOBAL_LIST_FILE}")
 endif ()
-
-include ("${CMS_PRIVATE_DIR}/Compiler.cmake")
 
 if (CMS_GLOBAL_LIST_FILE)
   include ("${CMS_GLOBAL_LIST_FILE}")
 endif ()
 
-if (NOT CMS_INSTALL_PREFIX)
-  set (CMS_INSTALL_PREFIX "$ENV{CMS_INSTALL_PREFIX}")
+if (NOT CMAKE_SCRIPT_MODE_FILE)
+  if (NOT CMS_INSTALL_PREFIX)
+    set (CMS_INSTALL_PREFIX "$ENV{CMS_INSTALL_PREFIX}")
+  endif ()
+
+  set (CMAKE_WARN_DEPRECATED true)
+  find_package (PkgConfig)
+
+  CMS_INIT_GLOBAL()
+  CMS_INIT_DIRECTORY()
 endif ()
-
-set (CMAKE_WARN_DEPRECATED true)
-find_package (PkgConfig)
-
-CMS_INIT_GLOBAL()
-CMS_INIT_DIRECTORY()
