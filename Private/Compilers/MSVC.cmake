@@ -23,7 +23,7 @@ function (CMS_DEFAULT_COMPILE_OPTIONS _ret)
   set (_options)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
       AND _findVersion VERSION_GREATER_EQUAL 0.0.7)
-    list (APPEND _options -fno-ms-compatibility)
+    # TODO : Append some useful options.
   endif ()
   CMS_RETURN(_ret [[${_options}]])
 endfunction ()
