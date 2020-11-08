@@ -342,7 +342,7 @@ function (CMS_SUBMIT_TARGET_SCOPE _name _compileTime _linkTime)
       set (_optFloatingPoint
            "/fp:${_actualFloatingPoint}")
       set (_optPermissive
-           "/permissive$<$<NOT:$<BOOL:${_actualPermissive}>>:->")
+           "$<$<NOT:$<BOOL:${_actualPermissive}>>:/permissive->")
       set (_optWarningLevel
            "/W${_actualWarningLevel}")
 
