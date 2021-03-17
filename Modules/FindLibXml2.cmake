@@ -11,7 +11,7 @@
 #=============================================================================
 # Copyright 2006-2009 Kitware, Inc.
 # Copyright 2006 Alexander Neundorf <neundorf@kde.org>
-# Copyright 2014-2015 Flokart World, Inc.
+# Copyright 2014-2021 Flokart World, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -42,18 +42,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #=============================================================================
 
-PKG_CHECK_MODULES(PC_LIBXML QUIET libxml-2.0)
-CMS_CONVERT_PACKAGE_DEFS(LIBXML2 PC_LIBXML)
+find_package (libxml2 CONFIG)
 
-set (LIBXML2_DEFINITIONS "${PC_LIBXML_CFLAGS_OTHER}")
+if (NOT LIBXML2_FOUND)
+  PKG_CHECK_MODULES(PC_LIBXML QUIET libxml-2.0)
+  CMS_CONVERT_PACKAGE_DEFS(LIBXML2 PC_LIBXML)
 
-find_path (LIBXML2_INCLUDE_DIR NAMES libxml/xpath.h
-           HINTS
-           "${PC_LIBXML_INCLUDEDIR}"
-           "${PC_LIBXML_INCLUDE_DIRS}"
-           PATH_SUFFIXES libxml2)
+  set (LIBXML2_DEFINITIONS "${PC_LIBXML_CFLAGS_OTHER}")
 
-find_program(LIBXML2_XMLLINT_EXECUTABLE xmllint)
+  find_path (LIBXML2_INCLUDE_DIR NAMES libxml/xpath.h
+             HINTS
+             "${PC_LIBXML_INCLUDEDIR}"
+             "${PC_LIBXML_INCLUDE_DIRS}"
+             PATH_SUFFIXES libxml2)
+
+  find_program(LIBXML2_XMLLINT_EXECUTABLE xmllint)
+endif ()
+
 # for backwards compat. with KDE 4.0.x:
 set(XMLLINT_EXECUTABLE "${LIBXML2_XMLLINT_EXECUTABLE}")
 
