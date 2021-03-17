@@ -8,8 +8,8 @@
 #  JPEG_LIBRARY, where to find the JPEG library.
 
 #=============================================================================
-# Copyright 2001-2009 Kitware, Inc.
-# Copyright 2014-2015 Flokart World, Inc.
+# Copyright 2001-2021 Kitware, Inc.
+# Copyright 2014-2021 Flokart World, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -22,10 +22,9 @@
 #   notice, this list of conditions and the following disclaimer in the
 #   documentation and/or other materials provided with the distribution.
 # 
-# * Neither the names of Kitware, Inc., the Insight Software Consortium,
-#   nor the names of their contributors may be used to endorse or promote
-#   products derived from this software without specific prior written
-#   permission.
+# * Neither the names of Kitware, Inc., nor the names of Contributors
+#   may be used to endorse or promote products derived from this
+#   software without specific prior written permission.
 # 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -40,41 +39,84 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #=============================================================================
 
-PKG_CHECK_MODULES(PC_JPEG QUIET libjpeg)
+set (JPEG_LIBRARIES)
+find_package (libjpeg-turbo QUIET CONFIG)
 
-find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h
-          HINTS
-          "${PC_JPEG_INCLUDEDIR}"
-          "${PC_JPEG_INCLUDE_DIRS}")
+if (libjpeg-turbo_FOUND)
+  get_target_property (_includeHints
+                       libjpeg-turbo::jpeg
+                       INTERFACE_INCLUDE_DIRECTORIES)
 
-set (JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
-set (JPEG_LIBRARY_DIR "${PC_JPEG_LIBDIR}" CACHE PATH "")
-set (_hints "${PC_JPEG_LIBDIR}/Release"
-            "${PC_JPEG_LIBDIR}/Debug"
-            ${PC_JPEG_LIBRARY_DIRS})
+  set (JPEG_LIBRARY libjpeg-turbo::jpeg
+       CACHE FILEPATH "Path to the library file or name of the library target")
+else ()
+  PKG_CHECK_MODULES(PC_JPEG QUIET libjpeg)
+  set (_includeHints ${PC_JPEG_INCLUDE_DIRS})
 
-find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES} HINTS ${_hints})
+  set (JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
+  set (_hints "${PC_JPEG_LIBDIR}/Release"
+              "${PC_JPEG_LIBDIR}/Debug"
+              ${PC_JPEG_LIBRARY_DIRS})
 
-set (JPEG_LIBRARIES "")
+  find_library (JPEG_LIBRARY NAMES ${JPEG_NAMES} HINTS ${_hints})
 
-foreach (_name IN LISTS PC_JPEG_LIBRARIES)
-  string (TOUPPER ${_name} _suffix)
-  find_library (JPEG_LIBRARY_${_suffix} NAMES ${_name} HINTS ${_hints})
-  mark_as_advanced (JPEG_LIBRARY_${_suffix})
+  foreach (_name IN LISTS PC_JPEG_LIBRARIES)
+    string (TOUPPER ${_name} _suffix)
 
-  list (APPEND JPEG_LIBRARIES ${JPEG_LIBRARY_${_suffix}})
-endforeach ()
+    if (NOT _suffix STREQUAL "JPEG")
+      find_library (JPEG_LIBRARY_${_suffix} NAMES ${_name} HINTS ${_hints})
+      mark_as_advanced (JPEG_LIBRARY_${_suffix})
 
+      list (APPEND JPEG_LIBRARIES ${JPEG_LIBRARY_${_suffix}})
+    endif ()
+  endforeach ()
+
+  set (JPEG_INCLUDE_DIRS "${PC_JPEG_INCLUDE_DIRS}")
+  CMS_REPLACE_MODULE_DIRS(JPEG
+                          "${PC_JPEG_INCLUDEDIR}"
+                          "${PC_JPEG_LIBDIR}")
+endif ()
+
+find_path(JPEG_INCLUDE_DIR NAMES jpeglib.h HINTS "${_includeHints}")
+list (INSERT JPEG_INCLUDE_DIRS 0 "${JPEG_INCLUDE_DIR}")
+list (REMOVE_DUPLICATES JPEG_INCLUDE_DIRS)
+
+list (APPEND JPEG_LIBRARIES "${JPEG_LIBRARY}")
 list (REMOVE_DUPLICATES JPEG_LIBRARIES)
 
-# handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
-# all listed variables are TRUE
+if(JPEG_INCLUDE_DIR)
+  file(GLOB _JPEG_CONFIG_HEADERS_FEDORA "${JPEG_INCLUDE_DIR}/jconfig*.h")
+  file(GLOB _JPEG_CONFIG_HEADERS_DEBIAN "${JPEG_INCLUDE_DIR}/*/jconfig.h")
+  set(_JPEG_CONFIG_HEADERS
+    "${JPEG_INCLUDE_DIR}/jpeglib.h"
+    ${_JPEG_CONFIG_HEADERS_FEDORA}
+    ${_JPEG_CONFIG_HEADERS_DEBIAN})
+  foreach (_JPEG_CONFIG_HEADER IN LISTS _JPEG_CONFIG_HEADERS)
+    if (NOT EXISTS "${_JPEG_CONFIG_HEADER}")
+      continue ()
+    endif ()
+    file(STRINGS "${_JPEG_CONFIG_HEADER}"
+      jpeg_lib_version REGEX "^#define[\t ]+JPEG_LIB_VERSION[\t ]+.*")
+
+    if (NOT jpeg_lib_version)
+      continue ()
+    endif ()
+
+    string(REGEX REPLACE "^#define[\t ]+JPEG_LIB_VERSION[\t ]+([0-9]+).*"
+      "\\1" JPEG_VERSION "${jpeg_lib_version}")
+    break ()
+  endforeach ()
+  unset(jpeg_lib_version)
+  unset(_JPEG_CONFIG_HEADER)
+  unset(_JPEG_CONFIG_HEADERS)
+  unset(_JPEG_CONFIG_HEADERS_FEDORA)
+  unset(_JPEG_CONFIG_HEADERS_DEBIAN)
+endif()
+
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(JPEG DEFAULT_MSG
-                                  JPEG_LIBRARY
-                                  JPEG_LIBRARIES
-                                  JPEG_LIBRARY_DIR
-                                  JPEG_INCLUDE_DIR)
+find_package_handle_standard_args(JPEG
+  REQUIRED_VARS JPEG_LIBRARY JPEG_INCLUDE_DIR
+  VERSION_VAR JPEG_VERSION)
 
 # Deprecated declarations.
 set (NATIVE_JPEG_INCLUDE_PATH ${JPEG_INCLUDE_DIR} )
@@ -83,12 +125,4 @@ if(JPEG_LIBRARY)
 endif()
 
 mark_as_advanced (JPEG_LIBRARY
-                  JPEG_INCLUDE_DIR
-                  JPEG_LIBRARY_DIR)
-
-set (JPEG_INCLUDE_DIRS "${PC_JPEG_INCLUDE_DIRS}")
-
-CMS_REPLACE_MODULE_DIRS(JPEG
-                        "${PC_JPEG_INCLUDEDIR}"
-                        "${PC_JPEG_LIBDIR}")
-CMS_PROMOTE_MODULE_DEFS(JPEG)
+                  JPEG_INCLUDE_DIR)
