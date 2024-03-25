@@ -25,7 +25,7 @@ function (CMS_PRECOMPILE_HEADER_CXX _headerFile)
 
   if (CMS_ENABLE_PRECOMPILE_HEADERS
       AND (_findVersion VERSION_GREATER_EQUAL 0.0.7
-           OR USE_PRECOMPILE_HEADER))
+           OR USE_PRECOMPILED_HEADER))
     file (READ "${_headerFile}.in" _headerInput)
     string (CONFIGURE "${_headerInput}" _headerOutput @ONLY)
     CMS_WRITE_FILE(${_headerPath} ${_headerOutput})
