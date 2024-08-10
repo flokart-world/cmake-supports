@@ -18,7 +18,7 @@
 # 
 #    3. This notice may not be removed or altered from any source distribution.
 
-set (PACKAGE_VERSION 0.0.8)
+set (PACKAGE_VERSION 0.0.9)
 
 if (PACKAGE_FIND_VERSION)
   # The syntax style until 0.0.3 is no longer supported.
