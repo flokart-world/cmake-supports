@@ -215,6 +215,14 @@ function (CMS_TEST_PACKAGE _ret _name)
       if (_length EQUAL 0)
         CMS_RETURN(_ret true)
       else ()
+        CMS_GET_PACKAGE_DOMAIN(_domain "${_name}")
+        if (_domain STREQUAL "LOCAL")
+          message (
+            FATAL_ERROR
+            "Package ${_name} is being built within this project, "
+            "but some required components are missing: ${ARGN}"
+          )
+        endif ()
         CMS_RETURN(_ret false)
       endif ()
     else ()
