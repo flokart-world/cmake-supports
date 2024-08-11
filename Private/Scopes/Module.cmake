@@ -59,14 +59,16 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
       list (APPEND _configLines "CMS_LOAD_PACKAGE(\"${_package}\" ${_suffix})")
     endforeach ()
 
-    install (EXPORT "${_name}"
-             DESTINATION "${_cmakeDir}"
-             FILE "${_cmakeTargets}")
+    if (_providedTargets)
+      install (EXPORT "${_name}"
+               DESTINATION "${_cmakeDir}"
+               FILE "${_cmakeTargets}")
 
-    export (EXPORT "${_name}" FILE "${_cmakePrefix}Targets.cmake")
+      export (EXPORT "${_name}" FILE "${_cmakePrefix}Targets.cmake")
 
-    list (APPEND _configLines
-          "include (\"\${CMAKE_CURRENT_LIST_DIR}/${_name}Targets.cmake\")")
+      list (APPEND _configLines
+            "include (\"\${CMAKE_CURRENT_LIST_DIR}/${_name}Targets.cmake\")")
+    endif ()
 
     foreach (_package IN LISTS _providedPackages)
       CMS_QUALIFY_NAMESPACE(_ns ${_package})
