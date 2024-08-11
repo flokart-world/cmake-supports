@@ -38,3 +38,15 @@ TESTS_ADD_CMAKE_SCENARIO(
     PASS_REGULAR_EXPRESSION "Hello!"
     FAIL_REGULAR_EXPRESSION "Falling back to buliding the bundled one"
 )
+
+TESTS_ADD_CMAKE_SCENARIO(
+  use-embedded-package-via-installed-module
+  PROJECT
+    use-embedded-package
+  OPTIONS
+    -D CMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/Modules
+    -D BUILD_OurSubModule=OFF
+  PROPERTIES
+    PASS_REGULAR_EXPRESSION "Hello!"
+    FAIL_REGULAR_EXPRESSION "Falling back to buliding the bundled one"
+)

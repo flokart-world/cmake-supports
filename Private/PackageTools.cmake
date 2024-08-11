@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -135,4 +135,10 @@ function (CMS_LOAD_CONFIG_AS_MODULE _name _path)
   FIND_PACKAGE_HANDLE_STANDARD_ARGS("${_name}" CONFIG_MODE)
 
   CMS_PROMOTE_TO_PARENT_SCOPE(${_name}_FOUND)
+  if (${_name}_CMakeSupportsVariables)
+    CMS_PROMOTE_TO_PARENT_SCOPE(${_name}_CMakeSupportsVariables)
+    foreach (_varName IN LISTS ${_name}_CMakeSupportsVariables)
+      CMS_PROMOTE_TO_PARENT_SCOPE(${_name}_${_varName})
+    endforeach ()
+  endif ()
 endfunction ()
