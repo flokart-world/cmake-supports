@@ -56,6 +56,10 @@ function (CMS_PACKAGE_COMPONENTS _ret _package)
   CMS_RETURN(_ret CMS::Package::Components[\${_package}])
 endfunction ()
 
+function (_CMS_PACKAGE_VARIABLE _ret _varId)
+  CMS_RETURN(_ret CMS::Package::Variable[\${_varId}])
+endfunction ()
+
 function (CMS_ADD_TO_CMAKE_TARGET_PROPERTY _target _property)
   get_property (_defined TARGET ${_target} PROPERTY ${_property} DEFINED)
 
@@ -151,6 +155,49 @@ function (CMS_SUBMIT_PACKAGE _package)
   set_property (GLOBAL PROPERTY ${_qname} "${ARGN}")
 endfunction ()
 
+function (CMS_PROVIDE_VARIABLE _package _varName)
+  CMS_PACKAGE_INTERFACE(_target "${_package}")
+  CMS_ASSERT_IDENTIFIER("${_varName}")
+  if (TARGET ${_target})
+    get_target_property (_providedVariables ${_target} CMS::ProvidedVariables)
+    list (FIND _providedVariables "${_varName}" _foundAt)
+    if (_foundAt LESS 0)
+      list (APPEND _providedVariables "${_varName}")
+      set_target_properties (
+        ${_target}
+        PROPERTIES CMS::ProvidedVariables "${_providedVariables}"
+      )
+    endif ()
+
+    _CMS_PACKAGE_VARIABLE(_qname "${_package}::${_varName}")
+    CMS_ENSURE_CMAKE_PROPERTY(GLOBAL PROPERTY "${_qname}")
+    set_property (GLOBAL PROPERTY "${_qname}" "${ARGN}")
+  else ()
+    message (FATAL_ERROR "Package ${_package} is not provided.")
+  endif ()
+endfunction ()
+
+function (_CMS_FETCH_VARIABLE _ret _package _varName)
+  CMS_PACKAGE_INTERFACE(_target "${_package}")
+  CMS_ASSERT_IDENTIFIER("${_varName}")
+  if (TARGET ${_target})
+    get_target_property (_providedVariables ${_target} CMS::ProvidedVariables)
+    list (FIND _providedVariables "${_varName}" _foundAt)
+    if (_foundAt LESS 0)
+      message (
+        FATAL_ERROR
+        "Package variable ${_varName} on ${_package} is not provided."
+      )
+    else ()
+      _CMS_PACKAGE_VARIABLE(_qname "${_package}::${_varName}")
+      get_cmake_property (_value "${_qname}")
+      CMS_RETURN(_ret \${_value})
+    endif ()
+  else ()
+    message (FATAL_ERROR "Package ${_package} is not provided.")
+  endif ()
+endfunction ()
+
 function (CMS_TEST_PACKAGE _ret _name)
   CMS_PACKAGE_INTERFACE(_target ${_name})
 
@@ -234,6 +281,12 @@ function (CMS_LOAD_PACKAGE _name)
     if (${_prefix}_FOUND)
       CMS_REGISTER_PACKAGE(${_name} ${_prefix})
       CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix} ${_components})
+      if (${_prefix}_CMakeSupportsVariables)
+        foreach (_varName IN LISTS ${_prefix}_CMakeSupportsVariables)
+          set (_value "${${_prefix}_${_varName}}")
+          CMS_PROVIDE_VARIABLE("${_name}" "${_varName}" ${_value})
+        endforeach ()
+      endif ()
     endif ()
   endif ()
 endfunction ()

@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -33,6 +33,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
   message (STATUS "Entering the embedded package ${_name}.")
 
   CMS_DEFINE_NAMESPACE("${_name}")
+  CMS_DEFINE_PROPERTY(ProvidedVariables)
   CMS_INHERIT_PROPERTY(ExportName)
 
   CMS_STACK_PUSH("${_name}")
@@ -41,6 +42,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "END")
 
   CMS_IMPORT_TARGET_DEPENDENCIES()
   CMS_SUBMIT_PACKAGE("${_name}")
+  _CMS_FINALIZE_VARIABLES("${_name}")
 
   CMS_PROPAGATE_PROPERTY(ProvidedTargets)
   CMS_ADD_TO_PARENT_PROPERTY(ProvidedPackages "${_name}")

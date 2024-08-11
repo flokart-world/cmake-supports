@@ -172,6 +172,7 @@ function (CMS_INIT_DIRECTORY)
     set_directory_properties (PROPERTIES CMS::Initialized true)
   endif ()
 
+  CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY CMS::ProvidedVariables)
   set_directory_properties (PROPERTIES
                             CMS::FindVersion "${CMakeSupports_FIND_VERSION}")
 endfunction ()

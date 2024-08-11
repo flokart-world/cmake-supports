@@ -41,6 +41,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
     CMS_GET_PROPERTY(_requiredPackages RequiredPackages)
     CMS_GET_PROPERTY(_providedPackages ProvidedPackages)
     CMS_GET_PROPERTY(_providedTargets ProvidedTargets)
+    CMS_GET_PROPERTY(_providedVariables ProvidedVariables)
     CMS_GET_PROPERTY(_version Version)
     CMS_GET_PROPERTY(_compatibility Compatibility)
 
@@ -81,12 +82,38 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
 
       list (APPEND _configLines
             "CMS_PROVIDE_PACKAGE(\"${_package}\"${_suffix})")
+
+      CMS_GET_QNAME_PROPERTY(_variables "${_ns}::ProvidedVariables")
+      foreach (_varName IN LISTS _variables)
+        CMS_GET_QNAME_PROPERTY(_value "${_ns}::Variable[${_varName}]")
+        string (CONFIGURE "@_value@" _value ESCAPE_QUOTES)
+        list (
+          APPEND
+          _configLines
+          "CMS_PROVIDE_VARIABLE(\"${_package}\" \"${_varName}\" \"${_value}\")"
+        )
+      endforeach ()
     endforeach ()
 
     CMS_JOIN(_targetList " " ${_providedTargets})
     list (APPEND _configLines
           "CMS_DECLARE_PROVIDED_TARGETS(${_name} ${_targetList})"
           "mark_as_advanced (${_name}_DIR)")
+
+    string (CONFIGURE "@_providedVariables@" _varList ESCAPE_QUOTES)
+    list (
+      APPEND _configLines
+      "set (${_name}_CMakeSupportsVariables \"${_varList}\")"
+    )
+    foreach (_varName IN LISTS _providedVariables)
+      CMS_GET_PROPERTY(_value "Variable[${_varName}]")
+      string (CONFIGURE "@_value@" _value ESCAPE_QUOTES)
+      list (
+        APPEND
+        _configLines
+        "set (${_name}_${_varName} \"${_value}\")"
+      )
+    endforeach ()
 
     CMS_JOIN(_configBody "\n" ${_configLines})
     file (WRITE ${_cmakeConfig} "${_configBody}\n")
@@ -99,6 +126,7 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
     install (FILES ${_module} DESTINATION ${CMS_MODULE_DIR})
 
     CMS_SUBMIT_PACKAGE(${_name} ${_providedTargets})
+    _CMS_FINALIZE_VARIABLES("${_name}")
     export (PACKAGE ${_name})
   endfunction ()
 elseif (CMS_SCOPE_CALL STREQUAL "SKIP")
@@ -138,6 +166,7 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
 
     CMS_DEFINE_NAMESPACE("${_name}")
     CMS_DEFINE_PROPERTY(Compatibility)
+    CMS_DEFINE_PROPERTY(ProvidedVariables)
 
     CMS_SET_PROPERTY(Compatibility AnyNewerVersion)
     CMS_SET_PROPERTY(ExportName ${_name})
