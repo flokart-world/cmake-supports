@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -126,6 +126,11 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
       CMS_TEST_PACKAGE(_loaded ${_name})
 
       if (NOT _loaded)
+        message (
+          WARNING
+          "Building ${_name} was turned off, but we couldn't find any "
+          "prebuilt package. Falling back to buliding the bundled one..."
+        )
         CMS_MODIFY_CACHE(${_switch} true)
       endif ()
     endif ()
