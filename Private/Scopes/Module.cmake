@@ -39,7 +39,6 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
     set (_cmakeConfigVersion "${_cmakePrefix}ConfigVersion.cmake")
 
     CMS_GET_PROPERTY(_requiredPackages RequiredPackages)
-    CMS_GET_PROPERTY(_requiredVariables RequiredVariables)
     CMS_GET_PROPERTY(_providedPackages ProvidedPackages)
     CMS_GET_PROPERTY(_providedTargets ProvidedTargets)
     CMS_GET_PROPERTY(_version Version)
@@ -57,10 +56,6 @@ if (CMS_SCOPE_CALL STREQUAL "INIT")
       CMS_JOIN(_suffix " " ${_packageParams})
 
       list (APPEND _configLines "CMS_LOAD_PACKAGE(\"${_package}\" ${_suffix})")
-    endforeach ()
-
-    foreach (_variable IN LISTS _requiredVariables)
-      list (APPEND _configLines "CMS_LOAD_VARIABLE(${_variable})")
     endforeach ()
 
     install (EXPORT "${_name}"

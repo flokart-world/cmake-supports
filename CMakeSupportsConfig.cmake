@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2020 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -169,7 +169,6 @@ function (CMS_INIT_DIRECTORY)
           $ENV{CMS_MODULE_PATH})
     CMS_PROMOTE_TO_PARENT_SCOPE(CMAKE_MODULE_PATH)
 
-    add_library (CMSVariables UNKNOWN IMPORTED)
     set_directory_properties (PROPERTIES CMS::Initialized true)
   endif ()
 

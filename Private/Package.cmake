@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -21,11 +21,6 @@
 function (CMS_QUALIFY_PACKAGE_PREFIX _ret _name)
   CMS_ASSERT_IDENTIFIER(${_name})
   CMS_RETURN(_ret CMS::Package::Prefix[\${_name}])
-endfunction ()
-
-function (CMS_QUALIFY_VARIABLE _ret _name)
-  CMS_ASSERT_IDENTIFIER(${_name})
-  CMS_RETURN(_ret CMS::Package::Variable[\${_name}])
 endfunction ()
 
 function (CMS_REGISTER_PACKAGE _name)
@@ -262,51 +257,9 @@ function (CMS_PROVIDE_PACKAGE _name)
   CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_name} ${ARGN})
 endfunction ()
 
-function (CMS_TEST_VARIABLE _ret _name)
-  CMS_QUALIFY_VARIABLE(_qname ${_name})
-  get_property (_defined TARGET CMSVariables PROPERTY ${_qname} DEFINED)
-
-  CMS_RETURN(_ret \${_defined})
-endfunction ()
-
-function (CMS_TRANSFER_VARIABLE _name)
-  CMS_QUALIFY_VARIABLE(_qname ${_name})
-  CMS_DEFINE_CMAKE_PROPERTY(TARGET PROPERTY ${_qname})
-  set_target_properties (CMSVariables PROPERTIES ${_qname} "${${_name}}")
-endfunction ()
-
 function (CMS_LOAD_VARIABLE _name)
-  CMS_TEST_VARIABLE(_defined ${_name})
-
-  if (NOT _defined)
-    CMS_TRANSFER_VARIABLE(${_name})
-  endif ()
-endfunction ()
-
-function (CMS_REGISTER_VARIABLE _name)
-  CMS_TEST_VARIABLE(_defined ${_name})
-
-  if (_defined)
-    message (FATAL_ERROR "Variable ${_name} has already been registered.")
-  else ()
-    CMS_TRANSFER_VARIABLE(${_name})
-  endif ()
-endfunction ()
-
-function (CMS_GET_VARIABLE _ret _name)
-  CMS_QUALIFY_VARIABLE(_qname ${_name})
-  get_target_property (_value CMSVariables ${_qname})
-
-  CMS_RETURN(_ret \${_value})
-endfunction ()
-
-function (CMS_GET_VARIABLE_EXPR _ret _name)
-  CMS_QUALIFY_VARIABLE(_qname ${_name})
-  get_property (_defined TARGET CMSVariables PROPERTY ${_qname} DEFINED)
-
-  if (_defined)
-    CMS_RETURN(_ret "$<TARGET_PROPERTY:CMSVariables,\${_qname}>")
-  else ()
-    message (FATAL_ERROR "Variable ${_name} is not loaded.")
-  endif ()
+  message (
+    FATAL_ERROR
+    "CMS_LOAD_VARIABLE is no longer supported. Please rebuild your package."
+  )
 endfunction ()

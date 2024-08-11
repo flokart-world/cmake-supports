@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2020 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -164,7 +164,6 @@ function (CMS_DEFINE_COMMON_PROPERTIES)
   CMS_DEFINE_PROPERTY(PublicHeaders)
   CMS_DEFINE_PROPERTY(PublicHeaderDirectories)
   CMS_DEFINE_PROPERTY(RequiredPackages)
-  CMS_DEFINE_PROPERTY(RequiredVariables)
   CMS_DEFINE_PROPERTY(SourceGroups)
   CMS_DEFINE_PROPERTY(Type)
   CMS_DEFINE_PROPERTY(Version)
@@ -288,44 +287,12 @@ function (CMS_ADD_FEATURES)
   CMS_APPEND_TO_PROPERTY(CompileFeatures ${_values})
 endfunction ()
 
-function (CMS_EXPAND_VARIABLES _ret)
-  set (_expanded "")
-
-  foreach (_string IN LISTS ARGN)
-    set (_subst "")
-    set (_pattern [=[\*\(([^\)]*)\)]=])
-
-    while (_string MATCHES "${_pattern}")
-      string (REGEX REPLACE ${_pattern} ";\\1;" _parts ${_string})
-
-      list (GET _parts 0 _literal)
-      list (GET _parts 1 _name)
-      list (GET _parts 2 _string)
-      list (APPEND _subst ${_literal})
-
-      if (_name STREQUAL "")
-        list (APPEND _subst *)
-      else ()
-        CMS_USE_VARIABLE(${_name})
-        CMS_GET_VARIABLE_EXPR(_expr ${_name})
-        list (APPEND _subst ${_expr})
-      endif ()
-    endwhile ()
-
-    string (CONCAT _string ${_subst} ${_string})
-    list (APPEND _expanded "${_string}")
-  endforeach ()
-
-  CMS_RETURN(_ret [[${_expanded}]])
-endfunction ()
-
 function (CMS_INCLUDE_DIRECTORIES)
   get_directory_property (_this CMS::Scope::This)
 
   if (_this)
     if (ARGN)
-      CMS_EXPAND_VARIABLES(_expanded ${ARGN})
-      CMS_DEFAULT_SCOPED_PROPERTY(_values ${_expanded})
+      CMS_DEFAULT_SCOPED_PROPERTY(_values ${ARGN})
       CMS_APPEND_TO_PROPERTY(IncludeDirectories ${_values})
     else ()
       message (FATAL_ERROR "At least one argument must be specified.")
@@ -338,8 +305,7 @@ function (CMS_LINK_DIRECTORIES)
 
   if (_this)
     if (ARGN)
-      CMS_EXPAND_VARIABLES(_expanded ${ARGN})
-      CMS_APPEND_TO_PROPERTY(LinkDirectories "${_expanded}")
+      CMS_APPEND_TO_PROPERTY(LinkDirectories ${ARGN})
     else ()
       message (FATAL_ERROR "At least one argument must be specified.")
     endif ()
@@ -351,8 +317,7 @@ function (CMS_LINK_LIBRARIES)
 
   if (_this)
     if (ARGN)
-      CMS_EXPAND_VARIABLES(_expanded ${ARGN})
-      CMS_DEFAULT_SCOPED_PROPERTY(_values ${_expanded})
+      CMS_DEFAULT_SCOPED_PROPERTY(_values ${ARGN})
       CMS_APPEND_TO_PROPERTY(LinkLibraries ${_values})
     else ()
       message (FATAL_ERROR "At least one argument must be specified.")
@@ -420,15 +385,6 @@ function (CMS_USE_PACKAGE _name)
   endif ()
 endfunction ()
 
-function (CMS_USE_VARIABLE _name)
-  get_directory_property (_this CMS::Scope::This)
-
-  if (_this)
-    CMS_LOAD_VARIABLE("${_name}")
-    CMS_APPEND_TO_PROPERTY(RequiredVariables ${_name})
-  endif ()
-endfunction ()
-
 function (CMS_IMPORT_PACKAGE _name)
   CMS_USE_PACKAGE("${_name}" ${ARGN})
   CMS_TEST_PACKAGE(_loaded "${_name}")
@@ -470,10 +426,6 @@ function (CMS_NORMALIZE_DEPENDENCIES)
   endif ()
 
   CMS_SET_PROPERTY(RequiredPackages "${_requiredPackages}")
-
-  CMS_GET_PROPERTY(_requiredVariables RequiredVariables)
-  list (REMOVE_DUPLICATES _requiredVariables)
-  CMS_SET_PROPERTY(RequiredVariables "${_requiredVariables}")
 endfunction ()
 
 function (CMS_QUALIFY_NAMESPACE _qname _name)
@@ -594,7 +546,6 @@ function (CMS_IMPORT_TARGET_DEPENDENCIES)
   foreach (_target IN LISTS _targets)
     CMS_QUALIFY_NAMESPACE(_ns ${_target})
     CMS_GET_QNAME_PROPERTY(_packages ${_ns}::RequiredPackages)
-    CMS_GET_QNAME_PROPERTY(_variables ${_ns}::RequiredVariables)
 
     foreach (_package IN LISTS _packages)
       set (_key RequiredComponents[${_package}])
@@ -603,7 +554,6 @@ function (CMS_IMPORT_TARGET_DEPENDENCIES)
     endforeach ()
 
     CMS_APPEND_TO_PROPERTY(RequiredPackages ${_packages})
-    CMS_APPEND_TO_PROPERTY(RequiredVariables ${_variables})
   endforeach ()
 
   CMS_NORMALIZE_DEPENDENCIES()
