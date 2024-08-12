@@ -1,4 +1,4 @@
 CMS_LOAD_CONFIG_AS_MODULE(
   OurSubModule
-  "${CMAKE_SOURCE_DIR}/Libraries/OurSubModule"
+  "${TESTS_ROOT_DIR}/Libraries/OurSubModule"
 )

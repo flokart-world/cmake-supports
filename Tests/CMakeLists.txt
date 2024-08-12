@@ -59,8 +59,9 @@ function (TESTS_ADD_CMAKE_SCENARIO _name)
 
   set (
     _options
-    -D "CMAKE_PREFIX_PATH=${CMAKE_SOURCE_DIR}/libraries"
+    -D "CMAKE_PREFIX_PATH=${CMAKE_SOURCE_DIR}/Libraries"
     -D "CMakeSupports_DIR=${CMAKE_SOURCE_DIR}/.."
+    -D "TESTS_ROOT_DIR=${CMAKE_SOURCE_DIR}"
     -D "TESTS_PROJECT_NAME=${_projectName}"
     -B "${CMAKE_BINARY_DIR}/Projects"
     -S "${CMAKE_SOURCE_DIR}/Projects"

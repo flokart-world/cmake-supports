@@ -19,7 +19,15 @@
 #    3. This notice may not be removed or altered from any source distribution.
 
 TESTS_ADD_CMAKE_SCENARIO(
-  use-embedded-package-with-bundled-module
+  use-embedded-package-with-bundled-module-zero
+  PROJECT
+    use-embedded-package
+  OPTIONS
+    -D BUILD_OurSubModule=ON
+)
+
+TESTS_ADD_CMAKE_SCENARIO(
+  use-embedded-package-with-bundled-module-hello
   PROJECT
     use-embedded-package
   OPTIONS
@@ -29,7 +37,15 @@ TESTS_ADD_CMAKE_SCENARIO(
 )
 
 TESTS_ADD_CMAKE_SCENARIO(
-  use-embedded-package-without-bundled-module
+  use-embedded-package-without-bundled-module-zero
+  PROJECT
+    use-embedded-package
+  OPTIONS
+    -D BUILD_OurSubModule=OFF
+)
+
+TESTS_ADD_CMAKE_SCENARIO(
+  use-embedded-package-without-bundled-module-hello
   PROJECT
     use-embedded-package
   OPTIONS
@@ -40,7 +56,16 @@ TESTS_ADD_CMAKE_SCENARIO(
 )
 
 TESTS_ADD_CMAKE_SCENARIO(
-  use-embedded-package-via-installed-module
+  use-embedded-package-via-installed-module-zero
+  PROJECT
+    use-embedded-package
+  OPTIONS
+    -D CMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/Modules
+    -D BUILD_OurSubModule=OFF
+)
+
+TESTS_ADD_CMAKE_SCENARIO(
+  use-embedded-package-via-installed-module-hello
   PROJECT
     use-embedded-package
   OPTIONS
