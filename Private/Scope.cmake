@@ -373,26 +373,39 @@ function (CMS_USE_PACKAGE _name)
   get_directory_property (_this CMS::Scope::This)
 
   if (_this)
-    CMS_PARSE_REQUIRED_COMPONENTS(_components ${ARGN})
+    _CMS_PARSE_PACKAGE_ARGUMENTS(_args _outVars ${ARGN})
+    CMS_PARSE_REQUIRED_COMPONENTS(_components ${_args})
 
-    CMS_LOAD_PACKAGE("${_name}" ${ARGN})
-    CMS_TEST_PACKAGE(_loaded ${_name} ${_components})
+    set (_requiredVars ${_name}_FOUND ${_outVars})
+    list (REMOVE_DUPLICATES _requiredVars)
+    CMS_LOAD_PACKAGE("${_name}" ${_args} OUT_VARS ${_requiredVars})
 
-    if (_loaded)
+    if (${_name}_FOUND)
       CMS_APPEND_TO_PROPERTY(RequiredPackages ${_name})
       CMS_ADD_REQUIRED_COMPONENTS(${_name} ${_components})
     endif ()
+
+    foreach (_varName IN LISTS _outVars)
+      CMS_PROMOTE_TO_PARENT_SCOPE(${_varName})
+    endforeach ()
   endif ()
 endfunction ()
 
 function (CMS_IMPORT_PACKAGE _name)
-  CMS_USE_PACKAGE("${_name}" ${ARGN})
-  CMS_TEST_PACKAGE(_loaded "${_name}")
+  _CMS_PARSE_PACKAGE_ARGUMENTS(_args _outVars ${ARGN})
 
-  if (_loaded)
+  set (_requiredVars ${_name}_FOUND ${_outVars})
+  list (REMOVE_DUPLICATES _requiredVars)
+  CMS_USE_PACKAGE("${_name}" ${_args} OUT_VARS ${_requiredVars})
+
+  if (${_name}_FOUND)
     CMS_PACKAGE_INTERFACE(_target "${_name}")
     CMS_LINK_LIBRARIES(${_target})
   endif ()
+
+  foreach (_varName IN LISTS _outVars)
+    CMS_PROMOTE_TO_PARENT_SCOPE(${_varName})
+  endforeach ()
 endfunction ()
 
 function (CMS_REPLAY_PACKAGE_ARGS _ret _package)

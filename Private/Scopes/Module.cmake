@@ -147,10 +147,9 @@ elseif (CMS_SCOPE_CALL STREQUAL "BEGIN")
     CMS_MODULE_SWITCH(_switch ${_name})
 
     if (NOT ${_switch})
-      CMS_USE_PACKAGE(${_name} QUIET)
-      CMS_TEST_PACKAGE(_loaded ${_name})
+      CMS_USE_PACKAGE(${_name} QUIET OUT_VARS ${_name}_FOUND)
 
-      if (NOT _loaded)
+      if (NOT ${_name}_FOUND)
         message (
           WARNING
           "Building ${_name} was turned off, but we couldn't find any "

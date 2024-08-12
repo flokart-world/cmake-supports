@@ -265,28 +265,66 @@ function (CMS_PARSE_REQUIRED_COMPONENTS _ret)
   CMS_RETURN(_ret [[${${_prefix}_REQUIRED_COMPONENTS}]])
 endfunction ()
 
+function (_CMS_PARSE_PACKAGE_ARGUMENTS _outArgs _outOutVars)
+  set (_outVars)
+
+  if (ARGN)
+    list (FIND ARGN "OUT_VARS" _delimPos)
+    if (_delimPos GREATER_EQUAL 0)
+      list (LENGTH ARGN _len)
+      math (EXPR _begin "${_delimPos} + 1")
+      if (_begin LESS _len)
+        list (SUBLIST ARGN ${_begin} -1 _outVars)
+        list (SUBLIST ARGN 0 ${_delimPos} ARGN)
+      else ()
+        list (REMOVE_AT ARGN ${_delimPos})
+      endif ()
+    endif ()
+  endif ()
+
+  CMS_RETURN(_outArgs \${ARGN})
+  CMS_RETURN(_outOutVars \${_outVars})
+endfunction ()
+
 function (CMS_LOAD_PACKAGE _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
+
+  set (_prefix "${_name}")
+  if (ARGN)
+    list (GET ARGN 0 _top)
+
+    if (_top STREQUAL "PREFIX")
+      list (GET ARGN 1 _prefix)
+      list (REMOVE_AT ARGN 0 1)
+    endif ()
+  endif ()
+
+  _CMS_PARSE_PACKAGE_ARGUMENTS(ARGN _outVars ${ARGN})
   CMS_PARSE_REQUIRED_COMPONENTS(_components ${ARGN})
 
-  # We are not sure how we should handle optional components.
-  # Right now, they are entirely ignored around the dependency management.
   CMS_TEST_PACKAGE(_loaded ${_name} ${_components})
 
-  if (NOT _loaded)
-    set (_prefix "${_name}")
+  set (_incompatibleOutVars ${_outVars})
+  list (REMOVE_ITEM _incompatibleOutVars ${_name}_FOUND)
 
-    if (ARGN)
-      list (GET ARGN 0 _top)
-
-      if (_top STREQUAL "PREFIX")
-        list (GET ARGN 1 _prefix)
-        list (REMOVE_AT ARGN 0 1)
+  if (_loaded AND NOT _incompatibleOutVars)
+    set (${_name}_FOUND true)
+  else ()
+    if (_loaded)
+      CMS_GET_PACKAGE_DOMAIN(_domain "${_name}")
+      if (_domain STREQUAL "LOCAL")
+        message (
+          FATAL_ERROR
+          "As the package ${_name} is bundled in the project, it is not "
+          "possible to load this package again with incompatible OUT_VARS: "
+          "${_incompatibleOutVars}"
+        )
       endif ()
     endif ()
 
     find_package ("${_name}" ${ARGN})
 
-    if (${_prefix}_FOUND)
+    if (${_name}_FOUND)
       CMS_REGISTER_PACKAGE(${_name} ${_prefix})
       CMS_DEFINE_PACKAGE_INTERFACE(${_name} ${_prefix} ${_components})
       if (${_prefix}_CMakeSupportsVariables)
@@ -297,6 +335,10 @@ function (CMS_LOAD_PACKAGE _name)
       endif ()
     endif ()
   endif ()
+
+  foreach (_varName IN LISTS _outVars)
+    CMS_PROMOTE_TO_PARENT_SCOPE(${_varName})
+  endforeach ()
 endfunction ()
 
 function (CMS_PROVIDE_PACKAGE _name)

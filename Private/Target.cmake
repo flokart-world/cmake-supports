@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2020 Flokart World, Inc.
+# Copyright (c) 2014-2024 Flokart World, Inc.
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -247,10 +247,10 @@ function (CMS_ENSURE_PACKAGES)
       list (APPEND _packages ${_deps})
       list (REMOVE_DUPLICATES _packages)
 
-      foreach (_package IN LISTS _deps)
-        set (_key RequiredComponents[${_package}])
+      foreach (_dep IN LISTS _deps)
+        set (_key RequiredComponents[${_dep}])
         CMS_GET_QNAME_PROPERTY(_components ${_qname}::${_key})
-        CMS_ADD_REQUIRED_COMPONENTS(${_package} ${_components})
+        CMS_ADD_REQUIRED_COMPONENTS(${_dep} ${_components})
       endforeach ()
     elseif (_domain STREQUAL "FOREIGN")
       list (APPEND _foreignPackages ${_package})
