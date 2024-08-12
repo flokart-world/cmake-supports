@@ -74,11 +74,37 @@ function (CMS_ADD_TO_CMAKE_TARGET_PROPERTY _target _property)
   set_target_properties (${_target} PROPERTIES ${_property} "${_values}")
 endfunction ()
 
+function (_CMS_MODERNIZE_LIBRARIES _ret)
+  set (_mode false)
+  set (_libs)
+
+  foreach (_term IN LISTS ARGN)
+    if (_mode)
+      if (_mode STREQUAL "optimized")
+        list (APPEND _libs "$<$<NOT:$<CONFIG:Debug>>:${_term}>")
+      else ()
+        list (APPEND _libs "$<$<CONFIG:Debug>:${_term}>")
+      endif ()
+
+      set (_mode false)
+    elseif (_term STREQUAL "optimized" OR _term STREQUAL "debug")
+      set (_mode ${_term})
+    else ()
+      list (APPEND _libs "${_term}")
+    endif ()
+  endforeach ()
+
+  CMS_RETURN(_ret \${_libs})
+endfunction ()
+
 # This function may be called more than once for a package within a same
 # scope, due to set of required components.
 function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
   CMS_ASSERT_IDENTIFIER(${_package})
   CMS_PACKAGE_INTERFACE(_target ${_package})
+
+  # TODO : Stop configuring the interface once we get rid of the deprecated
+  #        feature allowing targets to be linked with this package interface.
 
   if (${_prefix}_LIBRARY_DIRS)
     link_directories (${${_prefix}_LIBRARY_DIRS})
@@ -106,25 +132,7 @@ function (CMS_DEFINE_PACKAGE_INTERFACE _package _prefix)
   endif ()
 
   if (${_prefix}_LIBRARIES)
-    set (_mode false)
-    unset (_libs)
-
-    foreach (_term IN LISTS ${_prefix}_LIBRARIES)
-      if (_mode)
-        if (_mode STREQUAL "optimized")
-          list (APPEND _libs "$<$<NOT:$<CONFIG:Debug>>:${_term}>")
-        else ()
-          list (APPEND _libs "$<$<CONFIG:Debug>:${_term}>")
-        endif ()
-
-        set (_mode false)
-      elseif (_term STREQUAL "optimized" OR _term STREQUAL "debug")
-        set (_mode ${_term})
-      else ()
-        list (APPEND _libs "${_term}")
-      endif ()
-    endforeach ()
-
+    _CMS_MODERNIZE_LIBRARIES(_libs ${${_prefix}_LIBRARIES})
     CMS_ADD_TO_CMAKE_TARGET_PROPERTY(${_target}
                                      INTERFACE_LINK_LIBRARIES ${_libs})
   endif ()
@@ -289,6 +297,9 @@ endfunction ()
 function (CMS_LOAD_PACKAGE _name)
   CMS_ASSERT_IDENTIFIER(${_name})
 
+  # TODO : Deprecate this option. Right now this is still needed for
+  #        find_package playback if some prebulit packages whose targets
+  #        are linked with package interfaces exist.
   set (_prefix "${_name}")
   if (ARGN)
     list (GET ARGN 0 _top)

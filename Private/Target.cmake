@@ -263,6 +263,14 @@ function (CMS_ENSURE_PACKAGES)
 
   foreach (_package IN LISTS _foreignPackages)
     CMS_REPLAY_PACKAGE_ARGS(_params ${_package} REQUIRED)
+
+    # Care for compatibility with targets linked with package interfaces
+    # TODO : Remove it once we get rid of rescue for that deprecated feature.
+    CMS_GET_PACKAGE_PREFIX(_prefix ${_package})
+    if (NOT _prefix STREQUAL _package)
+      set (_params PREFIX ${_prefix} ${_params})
+    endif ()
+
     CMS_LOAD_PACKAGE(${_package} ${_params})
   endforeach ()
 endfunction ()

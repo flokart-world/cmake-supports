@@ -104,6 +104,22 @@ function (CMS_DECLARE_PROVIDED_TARGETS _package)
       endif ()
     endif ()
   endforeach ()
+
+  foreach (_target IN LISTS ARGN)
+    get_target_property (_libs "${_target}" INTERFACE_LINK_LIBRARIES)
+    if (_libs)
+      foreach (_lib IN LISTS _libs)
+        if (_lib MATCHES "^CMSPackageInterfaces::")
+          message (
+            DEPRECATION
+            "Prebuilt package ${_package} contains some targets linked with "
+            "package interfaces. Please rebuild it soon."
+          )
+          return ()
+        endif ()
+      endforeach ()
+    endif ()
+  endforeach ()
 endfunction ()
 
 function (CMS_LOAD_CONFIG_AS_MODULE _name _path)

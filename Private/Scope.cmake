@@ -392,15 +392,47 @@ function (CMS_USE_PACKAGE _name)
 endfunction ()
 
 function (CMS_IMPORT_PACKAGE _name)
+  CMS_ASSERT_IDENTIFIER(${_name})
+  set (_prefix "${_name}")
+
+  if (ARGN)
+    list (GET ARGN 0 _top)
+
+    if (_top STREQUAL "PREFIX")
+      list (GET ARGN 1 _prefix)
+      list (REMOVE_AT ARGN 0 1)
+    endif ()
+  endif ()
+
   _CMS_PARSE_PACKAGE_ARGUMENTS(_args _outVars ${ARGN})
 
-  set (_requiredVars ${_name}_FOUND ${_outVars})
+  set (
+    _requiredVars
+    ${_name}_FOUND
+    ${_prefix}_INCLUDE_DIR
+    ${_prefix}_INCLUDE_DIRS
+    ${_prefix}_LIBRARY_DIRS
+    ${_prefix}_LIBRARIES
+    ${_outVars}
+  )
   list (REMOVE_DUPLICATES _requiredVars)
   CMS_USE_PACKAGE("${_name}" ${_args} OUT_VARS ${_requiredVars})
 
   if (${_name}_FOUND)
-    CMS_PACKAGE_INTERFACE(_target "${_name}")
-    CMS_LINK_LIBRARIES(${_target})
+    set (_includes ${${_prefix}_INCLUDE_DIR} ${${_prefix}_INCLUDE_DIRS})
+    list (REMOVE_DUPLICATES _includes)
+    if (_includes)
+      CMS_INCLUDE_DIRECTORIES(${_includes})
+    endif ()
+
+    if (${_prefix}_LIBRARY_DIRS)
+      CMS_LINK_DIRECTORIES(${${_prefix}_LIBRARY_DIRS})
+    endif ()
+
+    _CMS_MODERNIZE_LIBRARIES(_libs ${${_prefix}_LIBRARIES})
+    if (_libs)
+      CMS_LINK_LIBRARIES(${_libs})
+    endif ()
   endif ()
 
   foreach (_varName IN LISTS _outVars)
@@ -410,13 +442,6 @@ endfunction ()
 
 function (CMS_REPLAY_PACKAGE_ARGS _ret _package)
   CMS_ASSERT_IDENTIFIER(${_package})
-  CMS_GET_PACKAGE_PREFIX(_prefix ${_package})
-
-  if (_prefix STREQUAL _package)
-    set (_params "")
-  else ()
-    set (_params PREFIX ${_prefix})
-  endif ()
 
   list (APPEND _params ${ARGN})
   CMS_GET_PROPERTY(_components RequiredComponents[${_package}])
